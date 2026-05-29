@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sem Chapa Jax — 1º Campeonato de Futevôlei</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0d0d0d; color: #e8e8e8; }
+.container { max-width: 700px; margin: 0 auto; padding: 16px; }
+.flyer { width: 100%; border-radius: 12px; display: block; margin-bottom: 16px; }
+.tab-bar { display: flex; gap: 4px; border-bottom: 1px solid #2a2a2a; margin-bottom: 16px; }
+.tab { font-size: 13px; font-weight: 600; padding: 10px 16px; cursor: pointer; border: none; background: none; color: #666; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.tab.active { color: #C9962A; border-bottom-color: #C9962A; }
+.screen { display: none; }
+.screen.active { display: block; }
+.section-title { font-size: 11px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 10px; }
+.card { background: #181818; border: 1px solid #2a2a2a; border-radius: 12px; padding: 16px 20px; margin-bottom: 14px; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th { font-size: 11px; font-weight: 600; color: #555; text-align: left; padding: 6px 8px; border-bottom: 1px solid #2a2a2a; }
+td { padding: 8px 8px; border-bottom: 1px solid #222; vertical-align: middle; color: #e8e8e8; }
+tr:last-child td { border-bottom: none; }
+.score-input { width: 44px; text-align: center; font-size: 14px; padding: 5px 6px; border: 1px solid #333; border-radius: 6px; background: #222; color: #e8e8e8; }
+.vs { color: #555; font-size: 13px; }
+.badge { display: inline-block; font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 600; }
+.badge-done { background: #1a3a1a; color: #6dbf6d; }
+.badge-pending { background: #222; color: #555; }
+.btn-primary { font-size: 13px; padding: 8px 18px; border-radius: 8px; cursor: pointer; background: #C9962A; color: #fff; border: none; font-weight: 600; }
+.btn-primary:hover { background: #e0a930; }
+.btn-secondary { font-size: 12px; padding: 6px 14px; border-radius: 8px; cursor: pointer; background: #222; color: #aaa; border: 1px solid #333; }
+.btn-secondary:hover { background: #2a2a2a; }
+.btn-draw { font-size: 15px; padding: 12px 24px; border-radius: 8px; cursor: pointer; background: #C9962A; color: #0d0d0d; border: none; font-weight: 700; width: 100%; margin-top: 8px; letter-spacing: 0.02em; }
+.btn-draw:hover { background: #e0a930; }
+input[type=text] { font-size: 14px; padding: 8px 12px; border-radius: 8px; border: 1px solid #333; background: #222; color: #e8e8e8; width: 100%; outline: none; }
+input[type=text]:focus { border-color: #C9962A; }
+.player-add-row { display: flex; gap: 8px; margin-bottom: 12px; }
+.player-add-row input { flex: 1; }
+.player-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 6px; margin-bottom: 10px; }
+.player-chip { display: flex; align-items: center; justify-content: space-between; background: #222; border: 1px solid #2e2e2e; border-radius: 8px; padding: 6px 8px 6px 12px; font-size: 13px; gap: 6px; }
+.player-chip span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #e8e8e8; }
+.remove-btn { background: none; border: none; cursor: pointer; color: #555; font-size: 14px; padding: 0 2px; line-height: 1; }
+.remove-btn:hover { color: #e53935; }
+.draw-teams-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 14px; }
+.team-col { border-radius: 8px; padding: 12px 14px; border: 1px solid #2a2a2a; }
+.team-col-title { font-size: 12px; font-weight: 700; margin: 0 0 8px; }
+.team-player { font-size: 13px; padding: 3px 0; }
+.info-text { font-size: 13px; color: #666; }
+@keyframes pop { 0%{transform:scale(0.93);opacity:0.3} 100%{transform:scale(1);opacity:1} }
+.draw-anim { animation: pop 0.3s ease; }
+.team-name-input { font-size: 14px; padding: 6px 10px; border-radius: 8px; border: 1px solid #333; background: #222; color: #e8e8e8; width: 100%; font-weight: 600; outline: none; }
+.team-name-input:focus { border-color: #C9962A; }
+.time-input { width: 72px; font-size: 13px; padding: 5px 6px; border: 1px solid #333; border-radius: 6px; text-align: center; background: #222; color: #e8e8e8; }
+
+/* Responsive */
+@media (max-width: 500px) {
+  body { font-size: 15px; }
+  .container { padding: 10px; }
+  .tab { font-size: 12px; padding: 8px 10px; }
+  .card { padding: 12px 14px; }
+  #team-name-inputs { grid-template-columns: repeat(2, 1fr) !important; }
+  .draw-teams-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .player-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+  /* Schedule table: hide time column, shrink */
+  .col-time { display: none; }
+  .score-input { width: 38px; padding: 4px 4px; font-size: 13px; }
+  th, td { padding: 6px 5px; font-size: 13px; }
+  .btn-draw { font-size: 14px; padding: 10px; }
+  .btn-primary { font-size: 13px; padding: 8px 14px; }
+}
+@media (min-width: 501px) and (max-width: 768px) {
+  #team-name-inputs { grid-template-columns: repeat(2, 1fr) !important; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<img class="flyer" src="sem-chapa-jax-flyer.jpg" alt="1º Campeonato Sem Chapa Jax de Futevôlei" />
+
+<div class="tab-bar">
+  <button class="tab active" onclick="showTab('players')">Players & Draw</button>
+  <button class="tab" onclick="showTab('schedule')">Schedule</button>
+  <button class="tab" onclick="showTab('standings')">Standings</button>
+</div>
+
+<!-- PLAYERS TAB -->
+<div id="tab-players" class="screen active">
+  <div class="card">
+    <p class="section-title">Add players</p>
+    <div class="player-add-row">
+      <input type="text" id="player-input" placeholder="Player name..." onkeydown="if(event.key==='Enter')addPlayer()" />
+      <button class="btn-primary" onclick="addPlayer()">Add</button>
+    </div>
+    <div class="player-grid" id="player-grid"></div>
+    <p class="info-text" id="player-count">0 players added</p>
+  </div>
+  <div class="card">
+    <p class="section-title">Team draw</p>
+    <p class="info-text" style="margin-bottom:12px">Needs at least 4 players. Players are randomly split into 4 teams.</p>
+    <button class="btn-draw" onclick="runDraw()">🎲 Draw teams</button>
+    <div class="draw-teams-grid" id="draw-result" style="display:none"></div>
+    <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
+      <button class="btn-secondary" onclick="runDraw()" id="redraw-btn" style="display:none">Redraw</button>
+      <button class="btn-primary" onclick="applyDrawToTournament()" id="apply-draw-btn" style="display:none">Apply to tournament →</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCHEDULE TAB -->
+<div id="tab-schedule" class="screen">
+  <div class="card">
+    <p class="section-title">Team names</p>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px" id="team-name-inputs"></div>
+    <button class="btn-primary" onclick="applyNames()">Apply names</button>
+  </div>
+  <div class="card">
+    <p class="section-title">Schedule — 6 games</p>
+    <table>
+      <thead><tr>
+        <th style="width:36px">#</th>
+        <th class="col-time" style="width:72px">Time</th>
+        <th>Home</th>
+        <th style="width:100px;text-align:center">Score</th>
+        <th>Away</th>
+        <th style="width:64px;text-align:center">Status</th>
+      </tr></thead>
+      <tbody id="schedule-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- STANDINGS TAB -->
+<div id="tab-standings" class="screen">
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <p class="section-title" style="margin:0">Standings</p>
+      <button class="btn-secondary" onclick="resetScores()">Reset scores</button>
+    </div>
+    <table>
+      <thead><tr>
+        <th style="width:32px">#</th>
+        <th>Team</th>
+        <th style="text-align:center;width:36px" title="Played">P</th>
+        <th style="text-align:center;width:36px" title="Wins">W</th>
+        <th style="text-align:center;width:36px" title="Losses">L</th>
+        <th style="text-align:center;width:56px" title="Sets">Sets</th>
+        <th style="text-align:center;width:48px">Pts</th>
+      </tr></thead>
+      <tbody id="standings-body"></tbody>
+    </table>
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<script>
+let players = [];
+let teams = ['Team A','Team B','Team C','Team D'];
+let drawnTeams = null;
+const pairs = [[0,1],[0,2],[0,3],[1,2],[1,3],[2,3]];
+const scores = pairs.map(() => ({h:null, a:null}));
+const defaultTimes = ['19:00','19:30','20:00','20:30','21:00','21:30'];
+const teamColors = [
+  {bg:'#1a1200', border:'#5a3e00', title:'#F5C842', text:'#c9a84c'},
+  {bg:'#0d1a0d', border:'#1a4a1a', title:'#6dbf6d', text:'#55a855'},
+  {bg:'#0d0d1a', border:'#1a1a4a', title:'#6aadeb', text:'#5090cc'},
+  {bg:'#1a0d0d', border:'#4a1a1a', title:'#e87a7a', text:'#cc5555'},
+];
+
+function showTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', ['players','schedule','standings'][i] === name));
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+function addPlayer() {
+  const inp = document.getElementById('player-input');
+  const name = inp.value.trim();
+  if (!name) return;
+  players.push(name); inp.value = ''; inp.focus(); renderPlayers();
+}
+
+function removePlayer(i) { players.splice(i, 1); renderPlayers(); }
+
+function renderPlayers() {
+  const grid = document.getElementById('player-grid'); grid.innerHTML = '';
+  players.forEach((p, i) => {
+    const chip = document.createElement('div'); chip.className = 'player-chip';
+    chip.innerHTML = `<span title="${p}">${p}</span><button class="remove-btn" onclick="removePlayer(${i})">✕</button>`;
+    grid.appendChild(chip);
+  });
+  document.getElementById('player-count').textContent = `${players.length} player${players.length !== 1 ? 's' : ''} added`;
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i+1)); [a[i],a[j]] = [a[j],a[i]]; }
+  return a;
+}
+
+function runDraw() {
+  if (players.length < 4) { alert('Add at least 4 players to run the draw.'); return; }
+  const shuffled = shuffle(players);
+  drawnTeams = [[],[],[],[]];
+  shuffled.forEach((p, i) => drawnTeams[i % 4].push(p));
+  const result = document.getElementById('draw-result');
+  result.style.display = 'grid'; result.innerHTML = '';
+  result.classList.add('draw-anim'); setTimeout(() => result.classList.remove('draw-anim'), 400);
+  drawnTeams.forEach((members, i) => {
+    const c = teamColors[i];
+    const div = document.createElement('div'); div.className = 'team-col';
+    div.style.background = c.bg; div.style.borderColor = c.border;
+    div.innerHTML = `<p class="team-col-title" style="color:${c.title}">${teams[i]}</p>` + members.map(m => `<div class="team-player" style="color:${c.text}">${m}</div>`).join('');
+    result.appendChild(div);
+  });
+  document.getElementById('redraw-btn').style.display = 'inline-block';
+  document.getElementById('apply-draw-btn').style.display = 'inline-block';
+}
+
+function applyDrawToTournament() {
+  if (!drawnTeams) return;
+  showTab('schedule'); renderTeamNameInputs();
+}
+
+function renderTeamNameInputs() {
+  const c = document.getElementById('team-name-inputs'); c.innerHTML = '';
+  teams.forEach((t, i) => {
+    const inp = document.createElement('input');
+    inp.type = 'text'; inp.value = t; inp.id = 'tni' + i; inp.className = 'team-name-input';
+    c.appendChild(inp);
+  });
+}
+
+function applyNames() {
+  teams = teams.map((_, i) => document.getElementById('tni' + i).value.trim() || 'Team ' + (i+1));
+  renderSchedule(); updateStandings();
+}
+
+function renderSchedule() {
+  const tbody = document.getElementById('schedule-body'); tbody.innerHTML = '';
+  pairs.forEach(([hi, ai], idx) => {
+    const s = scores[idx]; const done = s.h !== null && s.a !== null;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="color:#555;font-size:13px">${idx+1}</td>
+      <td class="col-time"><input class="time-input" type="text" value="${defaultTimes[idx]}" /></td>
+      <td style="font-weight:600">${teams[hi]}</td>
+      <td style="text-align:center">
+        <div style="display:flex;align-items:center;gap:4px;justify-content:center">
+          <input class="score-input" type="number" min="0" max="99" value="${s.h ?? ''}" placeholder="—" oninput="setScore(${idx},'h',this.value)" />
+          <span class="vs">×</span>
+          <input class="score-input" type="number" min="0" max="99" value="${s.a ?? ''}" placeholder="—" oninput="setScore(${idx},'a',this.value)" />
+        </div>
+      </td>
+      <td style="font-weight:600">${teams[ai]}</td>
+      <td style="text-align:center"><span class="badge ${done ? 'badge-done' : 'badge-pending'}">${done ? 'Done' : '—'}</span></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function setScore(idx, side, val) {
+  scores[idx][side] = val === '' ? null : parseInt(val);
+  const s = scores[idx]; const done = s.h !== null && s.a !== null;
+  const badge = document.querySelector(`#schedule-body tr:nth-child(${idx+1}) .badge`);
+  if (badge) { badge.className = 'badge ' + (done ? 'badge-done' : 'badge-pending'); badge.textContent = done ? 'Done' : '—'; }
+  updateStandings();
+}
+
+function updateStandings() {
+  const stats = teams.map(t => ({name:t, p:0, w:0, l:0, sf:0, sa:0, pts:0}));
+  pairs.forEach(([hi, ai], idx) => {
+    const s = scores[idx]; if (s.h === null || s.a === null) return;
+    stats[hi].p++; stats[ai].p++;
+    stats[hi].sf += s.h; stats[hi].sa += s.a;
+    stats[ai].sf += s.a; stats[ai].sa += s.h;
+    if (s.h > s.a) { stats[hi].w++; stats[ai].l++; stats[hi].pts += 3; }
+    else if (s.a > s.h) { stats[ai].w++; stats[hi].l++; stats[ai].pts += 3; }
+    else { stats[hi].pts += 1; stats[ai].pts += 1; }
+  });
+  stats.sort((a,b) => b.pts - a.pts || b.w - a.w || (b.sf - b.sa) - (a.sf - a.sa));
+  const tbody = document.getElementById('standings-body'); tbody.innerHTML = '';
+  stats.forEach((s, i) => {
+    const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="font-size:16px">${medal}</td>
+      <td style="font-weight:600">${s.name}</td>
+      <td style="text-align:center">${s.p}</td>
+      <td style="text-align:center">${s.w}</td>
+      <td style="text-align:center">${s.l}</td>
+      <td style="text-align:center;color:#555">${s.sf}–${s.sa}</td>
+      <td style="text-align:center;font-weight:700;color:#C9962A">${s.pts}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function resetScores() {
+  scores.forEach(s => { s.h = null; s.a = null; });
+  renderSchedule(); updateStandings();
+}
+
+renderTeamNameInputs(); renderSchedule(); updateStandings();
+</script>
+</body>
+</html>
