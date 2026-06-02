@@ -173,8 +173,6 @@ input[type=number]:disabled { opacity: 0.4; cursor: not-allowed; }
     <line x1="536" y1="178" x2="548" y2="165" stroke="#c9962a" stroke-width="5" stroke-linecap="round"/>
   </g>
   <text x="350" y="30" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="11" font-weight="700" fill="#c9962a" letter-spacing="3">JAX FOOTVOLLEY</text>
-  <text x="350" y="44" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="7" fill="#888" letter-spacing="2">TOURNAMENT · BEACH · COMMUNITY</text>
-  <text x="350" y="210" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="8" fill="#5a3e00" letter-spacing="1">SAND · NET · GAME</text>
 </svg>
 </div>
 
@@ -365,14 +363,31 @@ function shuffle(arr) {
 
 function runDraw() {
   updateConfig();
-  if (players.length < cfgTeams) { alert(`Add at least ${cfgTeams} players to draw ${cfgTeams} teams.`); return; }
+  const playersNeeded = players.length;
+  if (playersNeeded < cfgTeams) { alert(`Add at least ${cfgTeams} players to draw ${cfgTeams} teams.`); return; }
 
   const shuffled = shuffle(players);
+  const playersPerTeam = Math.floor(shuffled.length / cfgTeams);
+  const extras = shuffled.length % cfgTeams; // first N teams get one extra player
+
+  // Build teams: each team is an array of player names
+  const teams = [];
+  let idx = 0;
+  for (let t = 0; t < cfgTeams; t++) {
+    const size = playersPerTeam + (t < extras ? 1 : 0);
+    teams.push(shuffled.slice(idx, idx + size));
+    idx += size;
+  }
+
+  // Team label: join player names
+  const teamNames = teams.map(t => t.join(' / '));
+
+  // Distribute teams across groups
   drawnGroups = Array.from({length: cfgGroups}, () => []);
-  shuffled.slice(0, cfgTeams).forEach((p, i) => drawnGroups[i % cfgGroups].push(p));
+  teamNames.forEach((name, i) => drawnGroups[i % cfgGroups].push(name));
 
   const result = document.getElementById('draw-result');
-  const cols = cfgGroups === 1 ? Math.min(4, cfgTeams) : Math.min(cfgGroups, 4);
+  const cols = Math.min(cfgGroups, 4);
   result.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
   result.style.display = 'grid'; result.innerHTML = '';
   result.classList.add('draw-anim'); setTimeout(() => result.classList.remove('draw-anim'), 400);
