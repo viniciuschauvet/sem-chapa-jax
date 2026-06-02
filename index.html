@@ -471,9 +471,9 @@ function renderGroupStage() {
         <td style="font-weight:600;font-size:13px">${g.teams[hi]}</td>
         <td style="text-align:center">
           <div style="display:flex;align-items:center;gap:3px;justify-content:center">
-            <input class="score-input" type="number" min="0" max="99" value="${s.h??''}" placeholder="—" oninput="setGroupScore(${gi},${idx},'h',this.value)" />
+            <input class="score-input" type="number" min="0" max="99" value="${s.h??''}" placeholder="—" oninput="setGroupScore(${gi},${idx},'h',this.value)" onblur="updateStandingsTable(${gi})" />
             <span class="vs">×</span>
-            <input class="score-input" type="number" min="0" max="99" value="${s.a??''}" placeholder="—" oninput="setGroupScore(${gi},${idx},'a',this.value)" />
+            <input class="score-input" type="number" min="0" max="99" value="${s.a??''}" placeholder="—" oninput="setGroupScore(${gi},${idx},'a',this.value)" onblur="updateStandingsTable(${gi})" />
           </div>
         </td>
         <td style="font-weight:600;font-size:13px">${g.teams[ai]}</td>
@@ -640,23 +640,27 @@ function advanceWinner(roundIdx, matchIdx) {
 }
 
 function setPlayoffScore(roundIdx, matchIdx, side, val) {
+  // Just store the value — no re-render while typing
+  const m = playoffBracket[roundIdx][matchIdx];
+  m['score'+side] = val==='' ? null : parseInt(val);
+  saveState();
+}
+
+function resolvePlayoffMatch(roundIdx, matchIdx) {
+  // Called onblur — determine winner and re-render if needed
   const m = playoffBracket[roundIdx][matchIdx];
   const prevWinner = m.winner;
-  m['score'+side] = val==='' ? null : parseInt(val);
 
   if (m.scoreA !== null && m.scoreB !== null && m.scoreA !== m.scoreB) {
     m.winner = m.scoreA > m.scoreB ? m.teamA : m.teamB;
-    if (m.winner !== prevWinner) {
-      clearDownstream(roundIdx, matchIdx);
-      advanceWinner(roundIdx, matchIdx);
-      renderPlayoffs(); // only re-render when winner changes
-    }
   } else {
-    if (prevWinner !== null) {
-      m.winner = null;
-      clearDownstream(roundIdx, matchIdx);
-      renderPlayoffs();
-    }
+    m.winner = null;
+  }
+
+  if (m.winner !== prevWinner) {
+    clearDownstream(roundIdx, matchIdx);
+    if (m.winner) advanceWinner(roundIdx, matchIdx);
+    renderPlayoffs();
   }
   saveState();
 }
@@ -664,9 +668,12 @@ function setPlayoffScore(roundIdx, matchIdx, side, val) {
 function clearDownstream(roundIdx, matchIdx) {
   let idx = matchIdx;
   for (let r = roundIdx+1; r < playoffBracket.length; r++) {
+    const isA = idx % 2 === 0;
     idx = Math.floor(idx/2);
     const m = playoffBracket[r][idx];
-    m.teamA = null; m.teamB = null; m.scoreA = null; m.scoreB = null; m.winner = null;
+    // Only clear the slot that came from this match, not the other team's slot
+    if (isA) m.teamA = null; else m.teamB = null;
+    m.scoreA = null; m.scoreB = null; m.winner = null;
   }
 }
 
@@ -726,12 +733,12 @@ function renderPlayoffs() {
         <div class="match-team">
           <span class="${teamAClass}">${aWins?'🏆 ':''}${teamALabel}</span>
           <input class="match-score" type="number" min="0" max="999" value="${m.scoreA??''}" placeholder="—"
-            ${canEdit?`oninput="setPlayoffScore(${ri},${mi},'A',this.value)"`:'disabled'}/>
+            ${canEdit?`oninput="setPlayoffScore(${ri},${mi},'A',this.value)" onblur="resolvePlayoffMatch(${ri},${mi})"`:'disabled'}/>
         </div>
         <div class="match-team">
           <span class="${teamBClass}">${bWins?'🏆 ':''}${teamBLabel}</span>
           <input class="match-score" type="number" min="0" max="999" value="${m.scoreB??''}" placeholder="—"
-            ${canEdit?`oninput="setPlayoffScore(${ri},${mi},'B',this.value)"`:'disabled'}/>
+            ${canEdit?`oninput="setPlayoffScore(${ri},${mi},'B',this.value)" onblur="resolvePlayoffMatch(${ri},${mi})"`:'disabled'}/>
         </div>
       </div>`;
     });
