@@ -477,7 +477,7 @@ function renderGroupStage() {
           </div>
         </td>
         <td style="font-weight:600;font-size:13px">${g.teams[ai]}</td>
-        <td style="text-align:center"><span class="badge ${done?'badge-done':'badge-pending'}">${done?'Done':'—'}</span></td>
+        <td style="text-align:center"><span id="badge-g${gi}-m${idx}" class="badge ${done?'badge-done':'badge-pending'}">${done?'Done':'—'}</span></td>
       </tr>`;
     });
 
@@ -494,8 +494,9 @@ function renderGroupStage() {
         <th style="text-align:center;width:52px">Pts F/A</th>
         <th style="text-align:center;width:38px">+/-</th>
         <th style="text-align:center;width:38px">Pts</th>
-      </tr></thead><tbody>`;
+      </tr></thead>`;
 
+    html += `<tbody id="standings-body-${gi}">`;
     standings.forEach((s, rank) => {
       const qualifies = rank < cfgQualify;
       const medal = rank === 0 ? '🥇' : rank === 1 ? '🥈' : rank === 2 ? '🥉' : rank+1;
@@ -546,10 +547,42 @@ function getGroupStandings(g) {
 function setGroupScore(gi, idx, side, val) {
   groups[gi].scores[idx][side] = val==='' ? null : parseInt(val);
   const s = groups[gi].scores[idx]; const done = s.h!==null && s.a!==null;
-  // update badge inline
-  const allRows = document.querySelectorAll(`#group-stage-content table`);
-  renderGroupStage(); // re-render for standings update
+
+  // Update status badge without re-rendering (preserves focus)
+  const badge = document.getElementById(`badge-g${gi}-m${idx}`);
+  if (badge) {
+    badge.className = `badge ${done?'badge-done':'badge-pending'}`;
+    badge.textContent = done ? 'Done' : '—';
+  }
+
+  // Update standings table only
+  updateStandingsTable(gi);
   saveState();
+}
+
+function updateStandingsTable(gi) {
+  const el = document.getElementById(`standings-body-${gi}`);
+  if (!el) return;
+  const g = groups[gi];
+  const c = GROUP_COLORS[gi % GROUP_COLORS.length];
+  const standings = getGroupStandings(g);
+  el.innerHTML = standings.map((s, rank) => {
+    const qualifies = rank < cfgQualify;
+    const medal = rank === 0 ? '🥇' : rank === 1 ? '🥈' : rank === 2 ? '🥉' : rank+1;
+    const diff = s.sf - s.sa;
+    const diffColor = diff > 0 ? '#6dbf6d' : diff < 0 ? '#e87a7a' : '#888';
+    const rowStyle = qualifies ? `style="background:${c.bg}22"` : '';
+    return `<tr ${rowStyle}>
+      <td style="font-size:14px">${medal}</td>
+      <td style="font-weight:600;font-size:13px">${qualifies ? `<span style="color:${c.title}">▶ </span>` : ''}${s.name}</td>
+      <td style="text-align:center">${s.p}</td>
+      <td style="text-align:center">${s.w}</td>
+      <td style="text-align:center">${s.l}</td>
+      <td style="text-align:center;color:#555;font-size:12px">${s.sf}–${s.sa}</td>
+      <td style="text-align:center;font-weight:600;color:${diffColor}">${diff>0?'+':''}${diff}</td>
+      <td style="text-align:center;font-weight:700;color:#C9962A">${s.pts}</td>
+    </tr>`;
+  }).join('');
 }
 
 // ─── PLAYOFFS ────────────────────────────────────────────
