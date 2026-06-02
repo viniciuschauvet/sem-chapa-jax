@@ -641,18 +641,24 @@ function advanceWinner(roundIdx, matchIdx) {
 
 function setPlayoffScore(roundIdx, matchIdx, side, val) {
   const m = playoffBracket[roundIdx][matchIdx];
+  const prevWinner = m.winner;
   m['score'+side] = val==='' ? null : parseInt(val);
-
-  // Clear downstream if editing a completed match
-  clearDownstream(roundIdx, matchIdx);
 
   if (m.scoreA !== null && m.scoreB !== null && m.scoreA !== m.scoreB) {
     m.winner = m.scoreA > m.scoreB ? m.teamA : m.teamB;
-    advanceWinner(roundIdx, matchIdx);
+    if (m.winner !== prevWinner) {
+      clearDownstream(roundIdx, matchIdx);
+      advanceWinner(roundIdx, matchIdx);
+      renderPlayoffs(); // only re-render when winner changes
+    }
   } else {
-    m.winner = null;
+    if (prevWinner !== null) {
+      m.winner = null;
+      clearDownstream(roundIdx, matchIdx);
+      renderPlayoffs();
+    }
   }
-  renderPlayoffs(); saveState();
+  saveState();
 }
 
 function clearDownstream(roundIdx, matchIdx) {
