@@ -483,9 +483,12 @@ input[type=number]{-moz-appearance:textfield;}
     <p class="section-title">Draw</p>
     <button class="btn-draw" onclick="runDraw()">⬡ Execute Draw</button>
     <div class="draw-grid" id="draw-result" style="display:none"></div>
-    <div style="display:flex;gap:10px;margin-top:14px;justify-content:flex-end" id="draw-actions">
-      <button class="btn-secondary" id="redraw-btn" style="display:none" onclick="runDraw()">Redraw</button>
-      <button class="btn-primary" id="apply-btn" style="display:none" onclick="applyDraw()">Apply to tournament →</button>
+    <div style="display:flex;gap:10px;margin-top:14px;justify-content:space-between;align-items:center" id="draw-actions">
+      <button class="btn-danger" onclick="confirmReset()">Reset all</button>
+      <div style="display:flex;gap:10px">
+        <button class="btn-secondary" id="redraw-btn" style="display:none" onclick="runDraw()">Redraw</button>
+        <button class="btn-primary" id="apply-btn" style="display:none" onclick="applyDraw()">Apply to tournament →</button>
+      </div>
     </div>
   </div>
 </div>
@@ -828,7 +831,7 @@ function updateStandingsTable(gi) {
     const rowStyle = qualifies ? `style="background:${c.bg}"` : '';
     return `<tr ${rowStyle}>
       <td style="font-size:14px">${medal}</td>
-      <td style="font-weight:600;font-size:13px">${qualifies ? `<span style="color:${c.title}">▶ </span>` : ''}${s.name}</td>
+      <td style="font-weight:600;font-size:13px;${qualifies ? 'color:#00e5a0' : ''}">${s.name}</td>
       <td style="text-align:center;color:var(--text-muted)">${s.p}</td>
       <td style="text-align:center;color:var(--text-muted)">${s.w}</td>
       <td style="text-align:center;color:var(--text-muted)">${s.l}</td>
