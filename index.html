@@ -759,7 +759,7 @@ function renderGroupStage() {
       const rowStyle = qualifies ? `style="background:${c.bg}"` : '';
       html += `<tr ${rowStyle}>
         <td style="font-size:14px">${medal}</td>
-        <td style="font-weight:600;font-size:13px">${qualifies ? `<span style="color:${c.title}">▶ </span>` : ''}${s.name}</td>
+        <td style="font-weight:600;font-size:13px;${qualifies ? 'color:#00e5a0' : ''}">${s.name}</td>
         <td style="text-align:center;color:var(--text-muted)">${s.p}</td>
         <td style="text-align:center;color:var(--text-muted)">${s.w}</td>
         <td style="text-align:center;color:var(--text-muted)">${s.l}</td>
