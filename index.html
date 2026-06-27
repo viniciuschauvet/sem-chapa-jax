@@ -726,9 +726,9 @@ function renderGroupStage() {
         <td style="font-weight:600;font-size:13px;text-align:right">${g.teams[hi]}</td>
         <td style="text-align:center">
           <div style="display:flex;align-items:center;gap:4px;justify-content:center">
-            <input class="score-input" type="number" min="0" max="99" value="${s.h??''}" placeholder="—" oninput="setGroupScore(${gi},${idx},'h',this.value)" onblur="updateStandingsTable(${gi})" />
+            <input class="score-input" type="number" min="0" max="99" value="${s.h??''}" placeholder="—" oninput="setGroupScore(${gi},${idx},'h',this.value,this)" onblur="updateStandingsTable(${gi})" />
             <span class="vs">×</span>
-            <input class="score-input" type="number" min="0" max="99" value="${s.a??''}" placeholder="—" oninput="setGroupScore(${gi},${idx},'a',this.value)" onblur="updateStandingsTable(${gi})" />
+            <input class="score-input" type="number" min="0" max="99" value="${s.a??''}" placeholder="—" oninput="setGroupScore(${gi},${idx},'a',this.value,this)" onblur="updateStandingsTable(${gi})" />
           </div>
         </td>
         <td style="font-weight:600;font-size:13px;text-align:left">${g.teams[ai]}</td>
@@ -797,7 +797,8 @@ function getGroupStandings(g) {
   return stats.sort((a,b) => b.pts-a.pts || b.w-a.w || (b.sf-b.sa)-(a.sf-a.sa));
 }
 
-function setGroupScore(gi, idx, side, val) {
+function setGroupScore(gi, idx, side, val, el) {
+  if (val !== '' && parseInt(val) < 0) { el.value = 0; val = '0'; }
   const n = parseInt(val);
   if (!isNaN(n) && n < 0) { this && (this.value = 0); val = '0'; }
   groups[gi].scores[idx][side] = val==='' ? null : Math.max(0, parseInt(val));
@@ -886,7 +887,8 @@ function advanceWinner(roundIdx, matchIdx) {
   else playoffBracket[roundIdx+1][nextMatch].teamB = winner;
 }
 
-function setPlayoffScore(roundIdx, matchIdx, side, val) {
+function setPlayoffScore(roundIdx, matchIdx, side, val, el) {
+  if (val !== '' && parseInt(val) < 0) { el.value = 0; val = '0'; }
   const m = playoffBracket[roundIdx][matchIdx];
   m['score'+side] = val==='' ? null : Math.max(0, parseInt(val));
   saveState();
@@ -976,12 +978,12 @@ function renderPlayoffs() {
         <div class="match-team">
           <span class="${teamAClass}">${aWins?'🏆 ':''}${teamALabel}</span>
           <input class="match-score" type="number" min="0" max="999" value="${m.scoreA??''}" placeholder="—"
-            ${canEdit?`oninput="setPlayoffScore(${ri},${mi},'A',this.value)" onblur="resolvePlayoffMatch(${ri},${mi})"`:'disabled'}/>
+            ${canEdit?`oninput="setPlayoffScore(${ri},${mi},'A',this.value,this)" onblur="resolvePlayoffMatch(${ri},${mi})"`:'disabled'}/>
         </div>
         <div class="match-team">
           <span class="${teamBClass}">${bWins?'🏆 ':''}${teamBLabel}</span>
           <input class="match-score" type="number" min="0" max="999" value="${m.scoreB??''}" placeholder="—"
-            ${canEdit?`oninput="setPlayoffScore(${ri},${mi},'B',this.value)" onblur="resolvePlayoffMatch(${ri},${mi})"`:'disabled'}/>
+            ${canEdit?`oninput="setPlayoffScore(${ri},${mi},'B',this.value,this)" onblur="resolvePlayoffMatch(${ri},${mi})"`:'disabled'}/>
         </div>
       </div>`;
     });
