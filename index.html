@@ -426,7 +426,7 @@ input[type=number]{-moz-appearance:textfield;}
 }
 
 /* ── AUTH ── */
-.auth-bar{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-bottom:12px;}
+.auth-bar{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-bottom:12px;position:relative;z-index:50;}
 .auth-btn{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;letter-spacing:0.1em;
   padding:10px 18px;border-radius:10px;cursor:pointer;border:2px solid rgba(245,210,26,0.6);
   background:rgba(245,210,26,0.15);color:#F5D21A;text-transform:uppercase;transition:all 0.2s;
@@ -437,27 +437,43 @@ input[type=number]{-moz-appearance:textfield;}
 .admin-badge{font-family:'Orbitron',monospace;font-size:9px;font-weight:700;letter-spacing:0.1em;
   padding:6px 12px;border-radius:8px;background:rgba(0,200,80,0.1);color:#00e05a;
   border:1px solid rgba(0,200,80,0.3);}
-/* Spectator mode — hide all edit controls */
+
+
+
+/* ── SPECTATOR MODE ── */
+body.spectator .tab-setup { display:none !important; }
+body.spectator #tab-players { display:none !important; }
+
+/* Block only data-entry controls */
 body.spectator .btn-draw,
-body.spectator .btn-primary:not(#mode-draw-btn):not(#mode-manual-btn):not(#login-modal .btn-primary),
-body.spectator .score-input,
-body.spectator .match-score,
-body.spectator #draw-actions .btn-secondary,
-body.spectator #draw-actions .btn-primary,
-body.spectator .btn-danger,
-body.spectator .btn-playoff,
-body.spectator input.player-add-row input,
 body.spectator .remove-btn,
-body.spectator .config-grid input,
-body.spectator #manual-team-input
-  {pointer-events:none !important;opacity:0.35 !important;}
+body.spectator #player-input,
+body.spectator #manual-team-input,
 body.spectator .player-add-row button,
+body.spectator #redraw-btn,
 body.spectator #apply-btn,
-body.spectator #redraw-btn
-  {display:none !important;}
-/* Auth always clickable */
-.auth-bar, .auth-bar *, #login-modal, #login-modal *
-  {pointer-events:auto !important; opacity:1 !important;}
+body.spectator #mode-draw-btn,
+body.spectator #mode-manual-btn,
+body.spectator .config-grid input
+  { pointer-events:none !important; opacity:0.3 !important; }
+
+body.spectator #draw-actions .btn-primary,
+body.spectator #draw-actions .btn-secondary
+  { display:none !important; }
+
+/* Scores visible but not editable in spectator mode */
+body.spectator .score-input,
+body.spectator .match-score
+  { pointer-events:none !important; opacity:1 !important; background:rgba(245,210,26,0.08) !important; border-color:rgba(245,210,26,0.2) !important; }
+
+/* Standings stats fully visible */
+body.spectator td, body.spectator th
+  { opacity:1 !important; }
+
+/* Always allow auth bar and login modal */
+.auth-bar, .auth-bar *,
+#login-modal, #login-modal input, #login-modal button
+  { pointer-events:auto !important; opacity:1 !important; }
 
 </style>
 </head>
@@ -476,7 +492,6 @@ body.spectator #redraw-btn
       <div class="hero-badge">TOURNAMENT</div>
       <div class="hero-badge">MANAGER</div>
     </div>
-  </div>
 </div>
 
 <!-- AUTH BAR -->
@@ -486,13 +501,13 @@ body.spectator #redraw-btn
 
 <!-- ── TAB BAR ── -->
 <div class="tab-bar">
-  <button class="tab active" onclick="showTab('players')">Tournament Setup</button>
-  <button class="tab" onclick="showTab('groups')">Group Stage</button>
+  <button class="tab tab-setup" onclick="showTab('players')">Tournament Setup</button>
+  <button class="tab active" onclick="showTab('groups')">Group Stage</button>
   <button class="tab" onclick="showTab('playoffs')">Playoffs</button>
 </div>
 
 <!-- ── PLAYERS TAB ── -->
-<div id="tab-players" class="screen active">
+<div id="tab-players" class="screen">
 
   <div class="card">
     <p class="section-title">Tournament format</p>
@@ -570,7 +585,8 @@ body.spectator #redraw-btn
 </div>
 
 <!-- ── GROUP STAGE TAB ── -->
-<div id="tab-groups" class="screen">
+<div id="tab-groups" class="screen active">
+
   <div id="group-stage-content">
     <div class="card" style="text-align:center;padding:40px 20px">
       <p class="info-text">Execute the draw first to initialize groups.</p>
@@ -579,8 +595,8 @@ body.spectator #redraw-btn
 </div>
 
 <!-- ── PLAYOFFS TAB ── -->
-<div id="tab-playoffs" class="screen">
-  <div id="playoff-content">
+<div id="tab-playoffs" class="screen" style="padding-top:2px">
+  <div id="playoff-content" style="padding:0 2px">
     <div class="card" style="text-align:center;padding:40px 20px">
       <p class="info-text" style="margin-bottom:18px">Complete the group stage to unlock playoffs.</p>
       <button class="btn-playoff" onclick="generatePlayoffs()">Generate playoffs →</button>
@@ -607,6 +623,19 @@ body.spectator #redraw-btn
   </div>
 </div>
 
+
+<!-- CONFIRM MODAL (reusable) -->
+<div id="confirm-modal" class="modal-overlay">
+  <div class="modal-box">
+    <div style="font-size:36px;margin-bottom:14px">⚠</div>
+    <p id="confirm-modal-title" style="font-family:'Orbitron',monospace;font-size:13px;font-weight:700;margin-bottom:10px;color:var(--red);letter-spacing:0.05em"></p>
+    <p id="confirm-modal-msg" style="font-size:13px;color:var(--text-muted);margin-bottom:26px;line-height:1.6"></p>
+    <div style="display:flex;gap:10px">
+      <button class="btn-secondary" style="flex:1" onclick="closeConfirmModal()">Cancel</button>
+      <button class="btn-danger" style="flex:1" id="confirm-modal-btn">Confirm</button>
+    </div>
+  </div>
+</div>
 
 <!-- RESET MODAL -->
 <div id="reset-modal" class="modal-overlay">
@@ -651,6 +680,9 @@ async function doLogin() {
 }
 
 async function doLogout() {
+  showConfirmModal('LOGOUT?','You will return to spectator view.', async () => { await supa.auth.signOut(); setAdminMode(false); });
+}
+async function _doLogoutOld() {
   await supa.auth.signOut();
   setAdminMode(false);
 }
@@ -660,9 +692,12 @@ function setAdminMode(admin) {
   document.body.classList.toggle('spectator', !admin);
   const bar = document.getElementById('auth-bar');
   if (admin) {
-    bar.innerHTML = '<span class="admin-badge">✓ ADMIN</span><button class="auth-btn logout" onclick="doLogout()">Logout</button>';
+    bar.innerHTML = '<span class="admin-badge">✓ ADMIN</span><button class="auth-btn logout" style="pointer-events:auto;cursor:pointer;" onclick="doLogout()">Logout</button>';
+    showTab('players');
   } else {
     bar.innerHTML = '<button class="auth-btn" id="login-btn" onclick="openLoginModal()">🔐 Admin Login</button>';
+    // Spectators always land on Group Stage
+    showTab('groups');
   }
 }
 
@@ -1025,6 +1060,7 @@ function renderGroupStage() {
   const container = document.getElementById('group-stage-content');
   if (!groups.length) {
     container.innerHTML = '<div class="card" style="text-align:center;padding:40px 20px"><p class="info-text">Execute the draw first to initialize groups.</p></div>';
+    document.getElementById('format-rules-card').style.display = 'none';
     return;
   }
 
@@ -1337,14 +1373,7 @@ function renderPlayoffs() {
   const finalMatch = playoffBracket[playoffBracket.length-1][0];
   const podiumReady = finalMatch.winner && (!hasSemis || thirdPlaceMatch.winner);
 
-  let html = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:8px;flex-wrap:wrap">
-    <span style="font-family:'Orbitron',monospace;font-size:10px;color:var(--text-dim);letter-spacing:0.1em">${bracketSize}-TEAM BRACKET</span>
-    <div style="display:flex;gap:8px">
-      <button class="btn-secondary" onclick="generatePlayoffs()">Regenerate</button>
-      <button class="btn-secondary" onclick="confirmPlayoffReset()">↩ Reset playoffs</button>
-      <button class="btn-danger" onclick="confirmReset()">Reset all</button>
-    </div>
-  </div>`;
+  let html = ``;
 
   // ── PODIUM at top (when complete) ──
   if (podiumReady) {
@@ -1439,8 +1468,18 @@ function renderPlayoffs() {
 // ─── RESET ───────────────────────────────────────────────
 function confirmReset() { document.getElementById('reset-modal').style.display='flex'; }
 
+function showConfirmModal(title, msg, onConfirm) {
+  document.getElementById('confirm-modal-title').textContent = title;
+  document.getElementById('confirm-modal-msg').textContent = msg;
+  document.getElementById('confirm-modal-btn').onclick = () => { closeConfirmModal(); onConfirm(); };
+  document.getElementById('confirm-modal').style.display = 'flex';
+}
+function closeConfirmModal() { document.getElementById('confirm-modal').style.display = 'none'; }
+
 function confirmGroupReset() {
-  if (!confirm('Reset group stage? All scores will be cleared and you can re-apply teams from setup.')) return;
+  showConfirmModal('RESET GROUP STAGE?','All scores will be cleared. You can re-apply teams from setup.', _doGroupReset);
+}
+function _doGroupReset() {
   groups = []; drawnGroups = null; playoffBracket = []; playoffGenerated = false; thirdPlaceMatch = {teamA:null,teamB:null,scoreA:null,scoreB:null,winner:null};
   document.getElementById('draw-result').style.display = 'none';
   document.getElementById('redraw-btn').style.display = 'none';
@@ -1452,7 +1491,9 @@ function confirmGroupReset() {
 }
 
 function confirmPlayoffReset() {
-  if (!confirm('Reset playoffs? The bracket will be cleared.')) return;
+  showConfirmModal('RESET PLAYOFFS?','The bracket will be cleared.', _doPlayoffReset);
+}
+function _doPlayoffReset() {
   playoffBracket = []; playoffGenerated = false; thirdPlaceMatch = {teamA:null,teamB:null,scoreA:null,scoreB:null,winner:null};
   saveState();
   renderPlayoffs();
