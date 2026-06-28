@@ -426,7 +426,7 @@ input[type=number]{-moz-appearance:textfield;}
 }
 
 /* ── AUTH ── */
-.auth-bar{position:fixed;top:12px;right:12px;z-index:998;display:flex;align-items:center;gap:8px;}
+.auth-bar{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-bottom:12px;}
 .auth-btn{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;letter-spacing:0.1em;
   padding:10px 18px;border-radius:10px;cursor:pointer;border:2px solid rgba(245,210,26,0.6);
   background:rgba(245,210,26,0.15);color:#F5D21A;text-transform:uppercase;transition:all 0.2s;
@@ -477,6 +477,11 @@ body.spectator #redraw-btn
       <div class="hero-badge">MANAGER</div>
     </div>
   </div>
+</div>
+
+<!-- AUTH BAR -->
+<div class="auth-bar" id="auth-bar">
+  <button class="auth-btn" id="login-btn" onclick="openLoginModal()">🔐 Admin Login</button>
 </div>
 
 <!-- ── TAB BAR ── -->
@@ -585,10 +590,7 @@ body.spectator #redraw-btn
 
 </div><!-- /container -->
 
-<!-- AUTH BAR -->
-<div class="auth-bar" id="auth-bar">
-  <button class="auth-btn" id="login-btn" onclick="openLoginModal()">🔐 Admin Login</button>
-</div>
+
 
 <!-- LOGIN MODAL -->
 <div id="login-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);backdrop-filter:blur(10px);z-index:1000;align-items:center;justify-content:center;">
