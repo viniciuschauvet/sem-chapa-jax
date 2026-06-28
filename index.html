@@ -1073,8 +1073,14 @@ function lockSetup(locked) {
 function renderGroupStage() {
   const container = document.getElementById('group-stage-content');
   if (!groups.length) {
-    container.innerHTML = '<div class="card" style="text-align:center;padding:40px 20px"><p class="info-text">Execute the draw first to initialize groups.</p></div>';
-    document.getElementById('format-rules-card').style.display = 'none';
+    container.innerHTML = isAdmin
+      ? '<div class="card" style="text-align:center;padding:40px 20px"><p class="info-text">Execute the draw first to initialize groups.</p></div>'
+      : `<div class="card" style="text-align:center;padding:40px 24px">
+      <div style="font-size:36px;margin-bottom:12px">⏳</div>
+      <p style="font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:0.1em;margin-bottom:10px">DRAW NOT COMPLETED YET</p>
+      <p class="info-text" style="max-width:320px;margin:0 auto;line-height:1.7">The tournament draw hasn\'t been done yet. Once the admin completes the draw, all group games and standings will be available here.</p>
+    </div>`;
+    const frc = document.getElementById('format-rules-card'); if(frc) frc.style.display='none';
     return;
   }
 
@@ -1376,10 +1382,16 @@ function getRoundName(bracketSize, roundIdx) {
 function renderPlayoffs() {
   const container = document.getElementById('playoff-content');
   if (!playoffGenerated || !playoffBracket.length) {
-    container.innerHTML = `<div class="card" style="text-align:center;padding:40px 20px">
-      <p class="info-text" style="margin-bottom:18px">Complete the group stage to unlock the playoff bracket.</p>
-      <button class="btn-playoff" onclick="generatePlayoffs()">Generate playoffs →</button>
-    </div>`;
+    container.innerHTML = isAdmin
+      ? `<div class="card" style="text-align:center;padding:40px 20px">
+          <p class="info-text" style="margin-bottom:18px">Complete the group stage to unlock the playoff bracket.</p>
+          <button class="btn-playoff" onclick="generatePlayoffs()">Generate playoffs →</button>
+        </div>`
+      : `<div class="card" style="text-align:center;padding:40px 24px">
+          <div style="font-size:36px;margin-bottom:12px">🏆</div>
+          <p style="font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:0.1em;margin-bottom:10px">PLAYOFFS NOT STARTED YET</p>
+          <p class="info-text" style="max-width:320px;margin:0 auto;line-height:1.7">The playoff bracket will be generated automatically once all group stage matches are completed. Check back soon!</p>
+        </div>`;
     return;
   }
 
