@@ -594,21 +594,12 @@ body.spectator td, body.spectator th
 <!-- ── GROUP STAGE TAB ── -->
 <div id="tab-groups" class="screen active">
 
-  <div id="group-stage-content">
-    <div class="card" style="text-align:center;padding:40px 20px">
-      <p class="info-text">Execute the draw first to initialize groups.</p>
-    </div>
-  </div>
+  <div id="group-stage-content"></div>
 </div>
 
 <!-- ── PLAYOFFS TAB ── -->
 <div id="tab-playoffs" class="screen" style="padding-top:2px">
-  <div id="playoff-content" style="padding:0 2px">
-    <div class="card" style="text-align:center;padding:40px 20px">
-      <p class="info-text" style="margin-bottom:18px">Complete the group stage to unlock playoffs.</p>
-      <button class="btn-playoff" onclick="generatePlayoffs()">Generate playoffs →</button>
-    </div>
-  </div>
+  <div id="playoff-content" style="padding:0 2px"></div>
 </div>
 
 </div><!-- /container -->
@@ -738,8 +729,8 @@ function renderAll() {
   document.getElementById('cfg-groups').value  = cfgGroups;
   document.getElementById('cfg-qualify').value = cfgQualify;
   updateConfig();
-  if (groups.length) renderGroupStage();
-  if (playoffGenerated) renderPlayoffs();
+  renderGroupStage();
+  renderPlayoffs();
 }
 
 // Boot: check session + load from Supabase
