@@ -427,9 +427,10 @@ input[type=number]{-moz-appearance:textfield;}
 
 /* ── AUTH ── */
 .auth-bar{position:fixed;top:12px;right:12px;z-index:998;display:flex;align-items:center;gap:8px;}
-.auth-btn{font-family:'Orbitron',monospace;font-size:9px;font-weight:700;letter-spacing:0.1em;
-  padding:8px 14px;border-radius:8px;cursor:pointer;border:1px solid var(--border-hi);
-  background:rgba(245,210,26,0.1);color:#F5D21A;text-transform:uppercase;transition:all 0.2s;}
+.auth-btn{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;letter-spacing:0.1em;
+  padding:10px 18px;border-radius:10px;cursor:pointer;border:2px solid rgba(245,210,26,0.6);
+  background:rgba(245,210,26,0.15);color:#F5D21A;text-transform:uppercase;transition:all 0.2s;
+  box-shadow:0 0 14px rgba(245,210,26,0.2);}
 .auth-btn:hover{background:rgba(245,210,26,0.2);}
 .auth-btn.logout{background:rgba(255,64,96,0.1);color:var(--red);border-color:rgba(255,64,96,0.3);}
 .auth-btn.logout:hover{background:rgba(255,64,96,0.2);}
@@ -438,7 +439,7 @@ input[type=number]{-moz-appearance:textfield;}
   border:1px solid rgba(0,200,80,0.3);}
 /* Spectator mode — hide all edit controls */
 body.spectator .btn-draw,
-body.spectator .btn-primary:not(#mode-draw-btn):not(#mode-manual-btn),
+body.spectator .btn-primary:not(#mode-draw-btn):not(#mode-manual-btn):not(#login-modal .btn-primary),
 body.spectator .score-input,
 body.spectator .match-score,
 body.spectator #draw-actions .btn-secondary,
@@ -454,6 +455,9 @@ body.spectator .player-add-row button,
 body.spectator #apply-btn,
 body.spectator #redraw-btn
   {display:none !important;}
+/* Auth always clickable */
+.auth-bar, .auth-bar *, #login-modal, #login-modal *
+  {pointer-events:auto !important; opacity:1 !important;}
 
 </style>
 </head>
@@ -619,7 +623,7 @@ body.spectator #redraw-btn
 
 // ─── SUPABASE ─────────────────────────────────────────────
 const SUPA_URL = 'https://hhyxziaubdclcmkmtxll.supabase.co';
-const SUPA_KEY = 'sb_publishable_7d4IvD89E1RfdBAZzWaDMg_JldrVfhC';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhoeXh6aWF1YmRjbGNta210eGxsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1OTU4NDAsImV4cCI6MjA5ODE3MTg0MH0._aGcTlYzGAOlZgt8LNBCjvJNctwOfHTtM2aY-RWcZmE';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 let isAdmin = false;
@@ -632,11 +636,16 @@ function closeLoginModal() { document.getElementById('login-modal').style.displa
 async function doLogin() {
   const email = document.getElementById('login-email').value.trim();
   const pass  = document.getElementById('login-password').value;
-  document.getElementById('login-error').textContent = '';
-  const { data, error } = await supa.auth.signInWithPassword({ email, password: pass });
-  if (error) { document.getElementById('login-error').textContent = error.message; return; }
-  closeLoginModal();
-  setAdminMode(true);
+  const errEl = document.getElementById('login-error');
+  errEl.textContent = 'Logging in...';
+  try {
+    const { data, error } = await supa.auth.signInWithPassword({ email, password: pass });
+    if (error) { errEl.textContent = error.message; return; }
+    closeLoginModal();
+    setAdminMode(true);
+  } catch(e) {
+    errEl.textContent = 'Connection error: ' + e.message;
+  }
 }
 
 async function doLogout() {
