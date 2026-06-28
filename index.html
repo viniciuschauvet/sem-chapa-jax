@@ -445,22 +445,14 @@ input[type=number]{-moz-appearance:textfield;}
 
 <!-- ── TAB BAR ── -->
 <div class="tab-bar">
-  <button class="tab active" onclick="showTab('players')">Players & Draw</button>
+  <button class="tab active" onclick="showTab('players')">Tournament Setup</button>
   <button class="tab" onclick="showTab('groups')">Group Stage</button>
   <button class="tab" onclick="showTab('playoffs')">Playoffs</button>
 </div>
 
 <!-- ── PLAYERS TAB ── -->
 <div id="tab-players" class="screen active">
-  <div class="card">
-    <p class="section-title">Add players</p>
-    <div class="player-add-row">
-      <input type="text" id="player-input" placeholder="Player name..." onkeydown="if(event.key==='Enter')addPlayer()"/>
-      <button class="btn-primary" onclick="addPlayer()">Add</button>
-    </div>
-    <div class="player-grid" id="player-grid"></div>
-    <p class="info-text" id="player-count">0 players added</p>
-  </div>
+
   <div class="card">
     <p class="section-title">Tournament format</p>
     <div class="config-grid">
@@ -479,11 +471,53 @@ input[type=number]{-moz-appearance:textfield;}
     </div>
     <p id="config-summary" class="info-text"></p>
   </div>
+
+  <!-- Mode selector -->
   <div class="card">
-    <p class="section-title">Draw</p>
-    <button class="btn-draw" onclick="runDraw()">⬡ Execute Draw</button>
-    <div class="draw-grid" id="draw-result" style="display:none"></div>
-    <div style="display:flex;gap:10px;margin-top:14px;justify-content:space-between;align-items:center" id="draw-actions">
+    <p class="section-title">Setup teams</p>
+    <div style="display:flex;gap:8px;margin-bottom:18px;">
+      <button id="mode-draw-btn" onclick="setMode('draw')"
+        style="flex:1;padding:10px;border-radius:10px;border:1px solid var(--border-hi);
+               background:rgba(245,210,26,0.12);color:#F5D21A;font-family:'Orbitron',monospace;
+               font-size:10px;font-weight:700;letter-spacing:0.08em;cursor:pointer;transition:all 0.2s;">
+        🎲 DRAW TEAMS
+      </button>
+      <button id="mode-manual-btn" onclick="setMode('manual')"
+        style="flex:1;padding:10px;border-radius:10px;border:1px solid var(--border);
+               background:transparent;color:var(--text-muted);font-family:'Orbitron',monospace;
+               font-size:10px;font-weight:700;letter-spacing:0.08em;cursor:pointer;transition:all 0.2s;">
+        ✏️ ADD MANUALLY
+      </button>
+    </div>
+
+    <!-- DRAW MODE -->
+    <div id="mode-draw">
+      <p class="section-title">Add players</p>
+      <div class="player-add-row">
+        <input type="text" id="player-input" placeholder="Player name..." onkeydown="if(event.key==='Enter')addPlayer()"/>
+        <button class="btn-primary" onclick="addPlayer()">Add</button>
+      </div>
+      <div class="player-grid" id="player-grid"></div>
+      <p class="info-text" id="player-count">0 players added</p>
+      <button class="btn-draw" style="margin-top:14px" onclick="runDraw()">⬡ Execute Draw</button>
+    </div>
+
+    <!-- MANUAL MODE -->
+    <div id="mode-manual" style="display:none">
+      <p class="section-title">Add teams</p>
+      <div class="player-add-row">
+        <input type="text" id="manual-team-input" placeholder="Team name..." onkeydown="if(event.key==='Enter')addManualTeam()"/>
+        <button class="btn-primary" onclick="addManualTeam()">Add</button>
+      </div>
+      <div class="player-grid" id="manual-team-grid"></div>
+      <p class="info-text" id="manual-team-count" style="margin-bottom:14px">0 teams added</p>
+      <button class="btn-draw" onclick="applyManualTeams()">⬡ Apply teams</button>
+    </div>
+
+    <!-- Draw result (shared by both modes) -->
+    <div class="draw-grid" id="draw-result" style="display:none;margin-top:16px"></div>
+
+    <div style="display:flex;gap:10px;margin-top:10px;justify-content:space-between;align-items:center" id="draw-actions">
       <button class="btn-danger" onclick="confirmReset()">Reset all</button>
       <div style="display:flex;gap:10px">
         <button class="btn-secondary" id="redraw-btn" style="display:none" onclick="runDraw()">Redraw</button>
@@ -491,6 +525,7 @@ input[type=number]{-moz-appearance:textfield;}
       </div>
     </div>
   </div>
+
 </div>
 
 <!-- ── GROUP STAGE TAB ── -->
@@ -531,14 +566,22 @@ input[type=number]{-moz-appearance:textfield;}
 // ─── CONSTANTS ───────────────────────────────────────────
 const STORAGE_KEY = 'semchapajax_v2';
 const GROUP_COLORS = [
-  {bg:'rgba(0,156,59,0.07)',border:'rgba(0,156,59,0.35)',title:'#00c04a',text:'#7de89a',badge:'rgba(0,156,59,0.12)',badgeText:'#00c04a'},
-  {bg:'rgba(255,223,0,0.06)',border:'rgba(255,223,0,0.35)',title:'#FFDF00',text:'#ffe84d',badge:'rgba(255,223,0,0.1)',badgeText:'#FFDF00'},
-  {bg:'rgba(0,39,118,0.1)',border:'rgba(0,80,200,0.35)',title:'#4a90e2',text:'#8ab8f0',badge:'rgba(0,39,118,0.15)',badgeText:'#4a90e2'},
-  {bg:'rgba(0,156,59,0.05)',border:'rgba(255,223,0,0.25)',title:'#ffe84d',text:'#FFDF00',badge:'rgba(255,223,0,0.08)',badgeText:'#ffe84d'},
-  {bg:'rgba(0,80,180,0.07)',border:'rgba(0,156,59,0.3)',title:'#00c04a',text:'#6effa0',badge:'rgba(0,156,59,0.1)',badgeText:'#00c04a'},
-  {bg:'rgba(255,223,0,0.05)',border:'rgba(0,39,118,0.3)',title:'#4a90e2',text:'#a0c8f0',badge:'rgba(0,39,118,0.1)',badgeText:'#4a90e2'},
-  {bg:'rgba(0,156,59,0.06)',border:'rgba(0,156,59,0.28)',title:'#34d468',text:'#80e8a0',badge:'rgba(0,156,59,0.1)',badgeText:'#34d468'},
-  {bg:'rgba(255,223,0,0.05)',border:'rgba(255,223,0,0.28)',title:'#ffd000',text:'#ffe566',badge:'rgba(255,223,0,0.08)',badgeText:'#ffd000'},
+  // 0 Green
+  {bg:'rgba(0,160,60,0.08)',border:'rgba(0,200,80,0.45)',title:'#00e05a',text:'#7deaa0',badge:'rgba(0,160,60,0.14)',badgeText:'#00e05a'},
+  // 1 Blue
+  {bg:'rgba(30,80,220,0.08)',border:'rgba(60,120,255,0.45)',title:'#5090ff',text:'#90b8ff',badge:'rgba(30,80,220,0.14)',badgeText:'#5090ff'},
+  // 2 Red
+  {bg:'rgba(220,40,60,0.08)',border:'rgba(255,70,90,0.45)',title:'#ff5060',text:'#ff9aa0',badge:'rgba(220,40,60,0.14)',badgeText:'#ff5060'},
+  // 3 Purple
+  {bg:'rgba(140,60,230,0.08)',border:'rgba(180,100,255,0.45)',title:'#c070ff',text:'#daa8ff',badge:'rgba(140,60,230,0.14)',badgeText:'#c070ff'},
+  // 4 Orange
+  {bg:'rgba(230,120,20,0.08)',border:'rgba(255,160,40,0.45)',title:'#ff9820',text:'#ffc070',badge:'rgba(230,120,20,0.14)',badgeText:'#ff9820'},
+  // 5 Yellow
+  {bg:'rgba(220,200,0,0.08)',border:'rgba(245,210,26,0.45)',title:'#F5D21A',text:'#ffe84d',badge:'rgba(220,200,0,0.14)',badgeText:'#F5D21A'},
+  // 6 Cyan
+  {bg:'rgba(0,190,210,0.08)',border:'rgba(0,220,240,0.45)',title:'#00d8f0',text:'#70eaf8',badge:'rgba(0,190,210,0.14)',badgeText:'#00d8f0'},
+  // 7 Pink
+  {bg:'rgba(230,60,160,0.08)',border:'rgba(255,100,190,0.45)',title:'#ff60c0',text:'#ffaadd',badge:'rgba(230,60,160,0.14)',badgeText:'#ff60c0'},
 ];
 
 // ─── STATE ───────────────────────────────────────────────
@@ -547,11 +590,12 @@ let groups = [];
 let drawnGroups = null;
 let playoffBracket = [];
 let playoffGenerated = false;
+let thirdPlaceMatch = {teamA:null,teamB:null,scoreA:null,scoreB:null,winner:null};
 let cfgTeams = 8, cfgGroups = 1, cfgQualify = 2;
 
 // ─── PERSISTENCE ─────────────────────────────────────────
 function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({players,groups,playoffBracket,playoffGenerated,cfgTeams,cfgGroups,cfgQualify}));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({players,groups,playoffBracket,playoffGenerated,thirdPlaceMatch,cfgTeams,cfgGroups,cfgQualify}));
 }
 function loadState() {
   try {
@@ -562,6 +606,7 @@ function loadState() {
     groups = s.groups || [];
     playoffBracket = s.playoffBracket || [];
     playoffGenerated = s.playoffGenerated || false;
+    thirdPlaceMatch = s.thirdPlaceMatch || {teamA:null,teamB:null,scoreA:null,scoreB:null,winner:null};
     cfgTeams = s.cfgTeams || 8;
     cfgGroups = s.cfgGroups || 1;
     cfgQualify = s.cfgQualify || 2;
@@ -626,6 +671,91 @@ function shuffle(arr) {
   return a;
 }
 
+// ─── MODE TOGGLE ─────────────────────────────────────────
+function setMode(mode) {
+  const isManual = mode === 'manual';
+  document.getElementById('mode-draw').style.display    = isManual ? 'none' : 'block';
+  document.getElementById('mode-manual').style.display  = isManual ? 'block' : 'none';
+  const drawBtn   = document.getElementById('mode-draw-btn');
+  const manualBtn = document.getElementById('mode-manual-btn');
+  drawBtn.style.background   = isManual ? 'transparent'               : 'rgba(245,210,26,0.12)';
+  drawBtn.style.color        = isManual ? 'var(--text-muted)'         : '#F5D21A';
+  drawBtn.style.borderColor  = isManual ? 'var(--border)'             : 'var(--border-hi)';
+  manualBtn.style.background = isManual ? 'rgba(245,210,26,0.12)'     : 'transparent';
+  manualBtn.style.color      = isManual ? '#F5D21A'                   : 'var(--text-muted)';
+  manualBtn.style.borderColor= isManual ? 'var(--border-hi)'          : 'var(--border)';
+  // hide redraw if switching to manual
+  if (isManual) document.getElementById('redraw-btn').style.display = 'none';
+}
+
+// ─── MANUAL TEAMS ─────────────────────────────────────────
+let manualTeams = [];
+
+function addManualTeam() {
+  const inp = document.getElementById('manual-team-input');
+  const name = inp.value.trim(); if (!name) return;
+  manualTeams.push(name); inp.value = ''; inp.focus();
+  renderManualTeams();
+}
+
+function removeManualTeam(i) {
+  manualTeams.splice(i, 1);
+  renderManualTeams();
+}
+
+function renderManualTeams() {
+  const grid = document.getElementById('manual-team-grid');
+  grid.innerHTML = '';
+  manualTeams.forEach((t, i) => {
+    const chip = document.createElement('div'); chip.className = 'player-chip';
+    chip.innerHTML = `<span title="${t}">${t}</span><button class="remove-btn" onclick="removeManualTeam(${i})">✕</button>`;
+    grid.appendChild(chip);
+  });
+  document.getElementById('manual-team-count').textContent = `${manualTeams.length} team${manualTeams.length !== 1 ? 's' : ''} added`;
+}
+
+function applyManualTeams() {
+  updateConfig();
+  if (manualTeams.length < 2) { alert('Add at least 2 teams.'); return; }
+
+  // Distribute teams across groups
+  drawnGroups = Array.from({length: cfgGroups}, () => []);
+  manualTeams.forEach((name, i) => drawnGroups[i % cfgGroups].push(name));
+
+  // Render draw result cards (same as runDraw)
+  const result = document.getElementById('draw-result');
+  const cols = Math.min(manualTeams.length, 4);
+  result.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+  result.style.display = 'grid'; result.innerHTML = '';
+  result.classList.add('draw-anim'); setTimeout(() => result.classList.remove('draw-anim'), 800);
+
+  let teamIdx = 0;
+  drawnGroups.forEach((members, gi) => {
+    const groupLabel = cfgGroups > 1 ? `Group ${String.fromCharCode(65+gi)}` : null;
+    members.forEach((teamName, ti) => {
+      const c = GROUP_COLORS[gi % GROUP_COLORS.length];
+      const div = document.createElement('div'); div.className = 'team-col';
+      div.style.cssText = `background:${c.bg};border-color:${c.border};color:${c.title}`;
+      const label = groupLabel ? `<span style="font-size:9px;font-family:'Orbitron',monospace;color:${c.text};opacity:0.6;letter-spacing:0.1em">${groupLabel}</span><br>` : '';
+      const teamNumber = `<p class="team-col-title" style="color:${c.title}">Team ${teamIdx + 1}</p>`;
+      const gIdx = gi, tIdx = ti;
+      const nameInput = document.createElement('input');
+      nameInput.type = 'text'; nameInput.value = teamName; nameInput.placeholder = 'Team name...';
+      nameInput.style.cssText = `margin-top:4px;width:100%;font-size:12px;font-weight:600;padding:5px 8px;border-radius:6px;background:rgba(0,0,0,0.25);border:1px solid ${c.border};color:${c.title};font-family:'Space Grotesk',sans-serif;outline:none;`;
+      nameInput.addEventListener('input', () => { drawnGroups[gIdx][tIdx] = nameInput.value || teamName; });
+      nameInput.addEventListener('focus', () => nameInput.style.borderColor = '#F5D21A');
+      nameInput.addEventListener('blur',  () => nameInput.style.borderColor = c.border);
+      div.innerHTML = label + teamNumber;
+      div.appendChild(nameInput);
+      result.appendChild(div);
+      teamIdx++;
+    });
+  });
+
+  document.getElementById('redraw-btn').style.display = 'none';
+  document.getElementById('apply-btn').style.display = 'inline-block';
+}
+
 function runDraw() {
   updateConfig();
   if (players.length < cfgTeams) { alert(`Add at least ${cfgTeams} players to draw ${cfgTeams} teams.`); return; }
@@ -657,13 +787,31 @@ function runDraw() {
   drawnGroups.forEach((members, gi) => {
     const groupLabel = cfgGroups > 1 ? `Group ${String.fromCharCode(65+gi)}` : null;
     members.forEach((teamName, ti) => {
-      const c = GROUP_COLORS[teamIdx % GROUP_COLORS.length];
+      const c = GROUP_COLORS[gi % GROUP_COLORS.length];
       const div = document.createElement('div'); div.className = 'team-col';
       div.style.cssText = `background:${c.bg};border-color:${c.border};color:${c.title}`;
       const label = groupLabel ? `<span style="font-size:9px;font-family:'Orbitron',monospace;color:${c.text};opacity:0.6;letter-spacing:0.1em">${groupLabel}</span><br>` : '';
       const teamNumber = `<p class="team-col-title" style="color:${c.title}">Team ${teamIdx + 1}</p>`;
       const ps = teamName.split(' / ').map(p => `<div class="team-player" style="color:${c.text}">${p}</div>`).join('');
+      // Editable team name input
+      const gIdx = gi, tIdx = ti;
+      const nameInput = document.createElement('input');
+      nameInput.type = 'text';
+      nameInput.value = teamName;
+      nameInput.placeholder = 'Team name...';
+      nameInput.style.cssText = `
+        margin-top:8px;width:100%;font-size:12px;font-weight:600;
+        padding:5px 8px;border-radius:6px;
+        background:rgba(0,0,0,0.25);border:1px solid ${c.border};
+        color:${c.title};font-family:'Space Grotesk',sans-serif;outline:none;
+      `;
+      nameInput.addEventListener('input', () => {
+        drawnGroups[gIdx][tIdx] = nameInput.value || teamName;
+      });
+      nameInput.addEventListener('focus', () => nameInput.style.borderColor = '#F5D21A');
+      nameInput.addEventListener('blur',  () => nameInput.style.borderColor = c.border);
       div.innerHTML = label + teamNumber + ps;
+      div.appendChild(nameInput);
       result.appendChild(div);
       teamIdx++;
     });
@@ -685,10 +833,25 @@ function applyDraw() {
       scores: pairs.map(() => ({h:null, a:null}))
     };
   });
-  playoffBracket = []; playoffGenerated = false;
+  playoffBracket = []; playoffGenerated = false; thirdPlaceMatch = {teamA:null,teamB:null,scoreA:null,scoreB:null,winner:null};
   showTab('groups');
   renderGroupStage();
   saveState();
+}
+
+function lockSetup(locked) {
+  const ids = ['player-input','cfg-teams','cfg-groups','cfg-qualify','manual-team-input'];
+  ids.forEach(id => { const el = document.getElementById(id); if (el) { el.disabled = locked; el.style.opacity = locked ? '0.4' : '1'; }});
+  // Disable add buttons and mode toggle
+  ['mode-draw-btn','mode-manual-btn'].forEach(id => {
+    const el = document.getElementById(id); if (el) { el.disabled = locked; el.style.opacity = locked ? '0.4' : '1'; el.style.cursor = locked ? 'not-allowed' : 'pointer'; }
+  });
+  // Hide draw/apply buttons, show only reset
+  document.getElementById('redraw-btn').style.display = 'none';
+  document.getElementById('apply-btn').style.display = 'none';
+  // Show locked message
+  const msg = document.getElementById('setup-locked-msg');
+  if (msg) msg.style.display = locked ? 'block' : 'none';
 }
 
 // ─── GROUP STAGE ──────────────────────────────────────────
@@ -775,10 +938,19 @@ function renderGroupStage() {
     html += `</tbody></table></div>`;
   });
 
+  const allDone = groups.every(g => g.scores.every(s => s.h !== null && s.a !== null));
   html += `<div class="card" style="text-align:center;padding:24px">
     <p class="info-text" style="margin-bottom:14px">${cfgGroups * cfgQualify} teams will qualify for playoffs</p>
-    <button class="btn-playoff" onclick="generatePlayoffs(); showTab('playoffs')">Generate playoffs →</button>
-    <div style="margin-top:12px">
+    <button id="gen-playoffs-btn" class="btn-playoff" onclick="generatePlayoffs(); showTab('playoffs')"
+      ${!allDone ? 'disabled' : ''}
+      style="${!allDone ? 'opacity:0.35;cursor:not-allowed;' : ''}">
+      Generate playoffs →
+    </button>
+    <p id="playoffs-pending-msg" style="font-size:11px;color:var(--text-dim);margin-top:8px;${allDone ? 'display:none' : ''}">
+      Complete all matches to unlock playoffs
+    </p>
+    <div style="display:flex;gap:10px;margin-top:12px;justify-content:center">
+      <button class="btn-secondary" onclick="confirmGroupReset()">↩ Reset group stage</button>
       <button class="btn-danger" onclick="confirmReset()">Reset all</button>
     </div>
   </div>`;
@@ -840,10 +1012,32 @@ function updateStandingsTable(gi) {
       <td style="text-align:center;font-weight:700;color:var(--yellow)">${s.pts}</td>
     </tr>`;
   }).join('');
+
+  // Update generate playoffs button state
+  const allDone = groups.every(g => g.scores.every(s => s.h !== null && s.a !== null));
+  const btn = document.getElementById('gen-playoffs-btn');
+  const msg = document.getElementById('playoffs-pending-msg');
+  if (btn) { btn.disabled = !allDone; btn.style.opacity = allDone ? '1' : '0.35'; btn.style.cursor = allDone ? 'pointer' : 'not-allowed'; }
+  if (msg) { msg.style.display = allDone ? 'none' : ''; }
 }
 
 // ─── PLAYOFFS ────────────────────────────────────────────
 function generatePlayoffs() {
+  // Check all matches are completed
+  const incomplete = [];
+  groups.forEach((g, gi) => {
+    g.pairs.forEach(([hi, ai], idx) => {
+      const s = g.scores[idx];
+      if (s.h === null || s.a === null) {
+        incomplete.push(`${g.name}: ${g.teams[hi]} vs ${g.teams[ai]}`);
+      }
+    });
+  });
+  if (incomplete.length > 0) {
+    alert(`Complete all matches before generating playoffs.\n\nPending:\n• ${incomplete.slice(0,5).join('\n• ')}${incomplete.length > 5 ? `\n• ...and ${incomplete.length - 5} more` : ''}`);
+    return;
+  }
+
   const seedSlots = [];
   for (let q = 0; q < cfgQualify; q++) {
     groups.forEach(g => {
@@ -910,9 +1104,36 @@ function resolvePlayoffMatch(roundIdx, matchIdx) {
   if (m.winner !== prevWinner) {
     clearDownstream(roundIdx, matchIdx);
     if (m.winner) advanceWinner(roundIdx, matchIdx);
+
+    // Populate 3rd place match from semifinal losers
+    const sfRound = playoffBracket.length - 2;
+    if (roundIdx === sfRound && playoffBracket.length >= 2) {
+      const loser = m.winner ? (m.winner === m.teamA ? m.teamB : m.teamA) : null;
+      if (matchIdx === 0) thirdPlaceMatch.teamA = loser;
+      else thirdPlaceMatch.teamB = loser;
+      thirdPlaceMatch.scoreA = null; thirdPlaceMatch.scoreB = null; thirdPlaceMatch.winner = null;
+    }
+
     renderPlayoffs();
   }
   saveState();
+}
+
+function setThirdPlaceScore(side, val, el) {
+  if (val !== '' && parseInt(val) < 0) { el.value = 0; val = '0'; }
+  thirdPlaceMatch['score'+side] = val==='' ? null : Math.max(0, parseInt(val));
+  saveState();
+}
+
+function resolveThirdPlace() {
+  const m = thirdPlaceMatch;
+  if (m.scoreA !== null && m.scoreB !== null && m.scoreA !== m.scoreB) {
+    m.winner = m.scoreA > m.scoreB ? m.teamA : m.teamB;
+  } else {
+    m.winner = null;
+  }
+  saveState();
+  renderPlayoffs();
 }
 
 function clearDownstream(roundIdx, matchIdx) {
@@ -946,17 +1167,46 @@ function renderPlayoffs() {
   }
 
   const bracketSize = playoffBracket[0].length * 2;
-  let html = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+  const hasSemis = playoffBracket.length >= 2;
+  const finalMatch = playoffBracket[playoffBracket.length-1][0];
+  const podiumReady = finalMatch.winner && (!hasSemis || thirdPlaceMatch.winner);
+
+  let html = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:8px;flex-wrap:wrap">
     <span style="font-family:'Orbitron',monospace;font-size:10px;color:var(--text-dim);letter-spacing:0.1em">${bracketSize}-TEAM BRACKET</span>
-    <button class="btn-secondary" onclick="generatePlayoffs()">Regenerate</button>
+    <div style="display:flex;gap:8px">
+      <button class="btn-secondary" onclick="generatePlayoffs()">Regenerate</button>
+      <button class="btn-secondary" onclick="confirmPlayoffReset()">↩ Reset playoffs</button>
+      <button class="btn-danger" onclick="confirmReset()">Reset all</button>
+    </div>
   </div>`;
 
-  const finalMatch = playoffBracket[playoffBracket.length-1][0];
-  if (finalMatch.winner) {
-    html += `<div class="card" style="text-align:center;padding:28px;border-color:rgba(240,180,41,0.4);background:rgba(20,14,2,0.9);box-shadow:0 0 40px rgba(240,180,41,0.15)">
-      <div class="winner-crown">🏆</div>
-      <div class="winner-name">${finalMatch.winner}</div>
-      <p style="font-family:'Orbitron',monospace;font-size:9px;color:rgba(240,180,41,0.5);margin-top:8px;letter-spacing:0.2em">CHAMPION</p>
+  // ── PODIUM at top (when complete) ──
+  if (podiumReady) {
+    const first  = finalMatch.winner;
+    const second = finalMatch.winner === finalMatch.teamA ? finalMatch.teamB : finalMatch.teamA;
+    const third  = hasSemis ? thirdPlaceMatch.winner : null;
+    html += `<div class="card" style="text-align:center;padding:28px;border-color:rgba(245,210,26,0.4);background:rgba(10,14,4,0.95);box-shadow:0 0 50px rgba(245,210,26,0.15);margin-bottom:20px">
+      <p style="font-family:'Orbitron',monospace;font-size:10px;color:var(--text-dim);letter-spacing:0.2em;margin-bottom:20px">FINAL STANDINGS</p>
+      <div style="display:flex;align-items:flex-end;justify-content:center;gap:12px;flex-wrap:wrap">
+        <div style="text-align:center;flex:1;min-width:80px">
+          <div style="font-size:36px;margin-bottom:6px">🥈</div>
+          <div style="background:rgba(192,192,192,0.12);border:1px solid rgba(192,192,192,0.3);border-radius:12px 12px 0 0;padding:16px 10px 8px;min-height:80px;display:flex;align-items:center;justify-content:center">
+            <span style="font-family:'Orbitron',monospace;font-size:12px;font-weight:700;color:#c0c0c0">${second}</span>
+          </div>
+        </div>
+        <div style="text-align:center;flex:1;min-width:80px">
+          <div style="font-size:48px;margin-bottom:6px;animation:pulse 2s infinite">🏆</div>
+          <div style="background:rgba(245,210,26,0.12);border:1px solid rgba(245,210,26,0.45);border-radius:12px 12px 0 0;padding:20px 10px 8px;min-height:110px;display:flex;align-items:center;justify-content:center;box-shadow:var(--glow-yellow)">
+            <span style="font-family:'Orbitron',monospace;font-size:13px;font-weight:900;color:#F5D21A;text-shadow:var(--glow-yellow)">${first}</span>
+          </div>
+        </div>
+        ${third ? `<div style="text-align:center;flex:1;min-width:80px">
+          <div style="font-size:36px;margin-bottom:6px">🥉</div>
+          <div style="background:rgba(205,127,50,0.12);border:1px solid rgba(205,127,50,0.3);border-radius:12px 12px 0 0;padding:16px 10px 8px;min-height:60px;display:flex;align-items:center;justify-content:center">
+            <span style="font-family:'Orbitron',monospace;font-size:12px;font-weight:700;color:#cd7f32">${third}</span>
+          </div>
+        </div>` : ''}
+      </div>
     </div>`;
   }
 
@@ -994,15 +1244,60 @@ function renderPlayoffs() {
     html += `</div>`;
   });
 
+  // ── 3RD PLACE MATCH ──
+  if (hasSemis) {
+    const tp = thirdPlaceMatch;
+    const canEdit3 = tp.teamA && tp.teamB;
+    const aWins3 = tp.winner === tp.teamA;
+    const bWins3 = tp.winner === tp.teamB;
+    html += `<div class="bracket-round">
+      <p class="round-title" style="color:#cd7f32">3rd Place Match</p>
+      <div class="match-card" style="border-color:rgba(205,127,50,0.35);">
+        <div class="match-team">
+          <span class="match-team-name ${aWins3?'winner':bWins3?'loser':''}">${aWins3?'🥉 ':''}${tp.teamA||'TBD'}</span>
+          <input class="match-score" type="number" min="0" max="999" value="${tp.scoreA??''}" placeholder="—"
+            ${canEdit3?`oninput="setThirdPlaceScore('A',this.value,this)" onblur="resolveThirdPlace()"` : 'disabled'}/>
+        </div>
+        <div class="match-team">
+          <span class="match-team-name ${bWins3?'winner':aWins3?'loser':''}">${bWins3?'🥉 ':''}${tp.teamB||'TBD'}</span>
+          <input class="match-score" type="number" min="0" max="999" value="${tp.scoreB??''}" placeholder="—"
+            ${canEdit3?`oninput="setThirdPlaceScore('B',this.value,this)" onblur="resolveThirdPlace()"` : 'disabled'}/>
+        </div>
+      </div>
+    </div>`;
+  }
+
   container.innerHTML = html;
 }
 
 // ─── RESET ───────────────────────────────────────────────
 function confirmReset() { document.getElementById('reset-modal').style.display='flex'; }
+
+function confirmGroupReset() {
+  if (!confirm('Reset group stage? All scores will be cleared and you can re-apply teams from setup.')) return;
+  groups = []; drawnGroups = null; playoffBracket = []; playoffGenerated = false; thirdPlaceMatch = {teamA:null,teamB:null,scoreA:null,scoreB:null,winner:null};
+  document.getElementById('draw-result').style.display = 'none';
+  document.getElementById('redraw-btn').style.display = 'none';
+  document.getElementById('apply-btn').style.display = 'none';
+  document.getElementById('group-stage-content').innerHTML = '<div class="card" style="text-align:center;padding:40px 20px"><p class="info-text">Execute the draw first to initialize groups.</p></div>';
+  document.getElementById('playoff-content').innerHTML = '<div class="card" style="text-align:center;padding:40px 20px"><p class="info-text" style="margin-bottom:18px">Complete the group stage to unlock playoffs.</p><button class="btn-playoff" onclick="generatePlayoffs()">Generate playoffs →</button></div>';
+  saveState();
+  showTab('players');
+}
+
+function confirmPlayoffReset() {
+  if (!confirm('Reset playoffs? The bracket will be cleared.')) return;
+  playoffBracket = []; playoffGenerated = false; thirdPlaceMatch = {teamA:null,teamB:null,scoreA:null,scoreB:null,winner:null};
+  saveState();
+  renderPlayoffs();
+  showTab('groups');
+}
 function closeModal() { document.getElementById('reset-modal').style.display='none'; }
 function resetAll() {
   closeModal();
+  lockSetup(false);
   players=[]; groups=[]; drawnGroups=null; playoffBracket=[]; playoffGenerated=false;
+  manualTeams=[]; renderManualTeams();
   cfgTeams=8; cfgGroups=1; cfgQualify=2;
   localStorage.removeItem(STORAGE_KEY);
   document.getElementById('player-grid').innerHTML='';
@@ -1026,7 +1321,7 @@ if (loadState()) {
   document.getElementById('cfg-groups').value = cfgGroups;
   document.getElementById('cfg-qualify').value = cfgQualify;
   renderPlayers();
-  if (groups.length) renderGroupStage();
+  if (groups.length) { renderGroupStage(); }
   if (playoffGenerated) renderPlayoffs();
 } else {
   updateConfig();
