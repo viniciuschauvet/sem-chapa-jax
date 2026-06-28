@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
 <title>Jax Footvolley — Tournament OS</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
   --bg:       #030914;
@@ -423,6 +424,37 @@ input[type=number]{-moz-appearance:textfield;}
   .config-grid{grid-template-columns:1fr 1fr;}
   .tab{font-size:7px;padding:8px 7px;}
 }
+
+/* ── AUTH ── */
+.auth-bar{position:fixed;top:12px;right:12px;z-index:998;display:flex;align-items:center;gap:8px;}
+.auth-btn{font-family:'Orbitron',monospace;font-size:9px;font-weight:700;letter-spacing:0.1em;
+  padding:8px 14px;border-radius:8px;cursor:pointer;border:1px solid var(--border-hi);
+  background:rgba(245,210,26,0.1);color:#F5D21A;text-transform:uppercase;transition:all 0.2s;}
+.auth-btn:hover{background:rgba(245,210,26,0.2);}
+.auth-btn.logout{background:rgba(255,64,96,0.1);color:var(--red);border-color:rgba(255,64,96,0.3);}
+.auth-btn.logout:hover{background:rgba(255,64,96,0.2);}
+.admin-badge{font-family:'Orbitron',monospace;font-size:9px;font-weight:700;letter-spacing:0.1em;
+  padding:6px 12px;border-radius:8px;background:rgba(0,200,80,0.1);color:#00e05a;
+  border:1px solid rgba(0,200,80,0.3);}
+/* Spectator mode — hide all edit controls */
+body.spectator .btn-draw,
+body.spectator .btn-primary:not(#mode-draw-btn):not(#mode-manual-btn),
+body.spectator .score-input,
+body.spectator .match-score,
+body.spectator #draw-actions .btn-secondary,
+body.spectator #draw-actions .btn-primary,
+body.spectator .btn-danger,
+body.spectator .btn-playoff,
+body.spectator input.player-add-row input,
+body.spectator .remove-btn,
+body.spectator .config-grid input,
+body.spectator #manual-team-input
+  {pointer-events:none !important;opacity:0.35 !important;}
+body.spectator .player-add-row button,
+body.spectator #apply-btn,
+body.spectator #redraw-btn
+  {display:none !important;}
+
 </style>
 </head>
 <body>
@@ -549,6 +581,27 @@ input[type=number]{-moz-appearance:textfield;}
 
 </div><!-- /container -->
 
+<!-- AUTH BAR -->
+<div class="auth-bar" id="auth-bar">
+  <button class="auth-btn" id="login-btn" onclick="openLoginModal()">🔐 Admin Login</button>
+</div>
+
+<!-- LOGIN MODAL -->
+<div id="login-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);backdrop-filter:blur(10px);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:rgba(4,10,30,0.97);border:1px solid rgba(245,210,26,0.3);border-radius:18px;padding:32px;max-width:340px;width:90%;text-align:center;">
+    <p style="font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:#F5D21A;letter-spacing:0.08em;margin-bottom:6px">ADMIN LOGIN</p>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:24px">Enter your credentials to manage the tournament</p>
+    <input type="email" id="login-email" placeholder="Email" style="width:100%;margin-bottom:10px;font-size:16px;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:rgba(245,210,26,0.04);color:var(--text);outline:none;"/>
+    <input type="password" id="login-password" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()" style="width:100%;margin-bottom:6px;font-size:16px;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:rgba(245,210,26,0.04);color:var(--text);outline:none;"/>
+    <p id="login-error" style="font-size:12px;color:var(--red);margin-bottom:16px;min-height:18px"></p>
+    <div style="display:flex;gap:10px">
+      <button class="btn-secondary" style="flex:1" onclick="closeLoginModal()">Cancel</button>
+      <button class="btn-primary" style="flex:1" onclick="doLogin()">Login</button>
+    </div>
+  </div>
+</div>
+
+
 <!-- RESET MODAL -->
 <div id="reset-modal" class="modal-overlay">
   <div class="modal-box">
@@ -563,6 +616,100 @@ input[type=number]{-moz-appearance:textfield;}
 </div>
 
 <script>
+
+// ─── SUPABASE ─────────────────────────────────────────────
+const SUPA_URL = 'https://hhyxziaubdclcmkmtxll.supabase.co';
+const SUPA_KEY = 'sb_publishable_7d4IvD89E1RfdBAZzWaDMg_JldrVfhC';
+const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+let isAdmin = false;
+let realtimeChannel = null;
+
+// ─── AUTH ─────────────────────────────────────────────────
+function openLoginModal() { document.getElementById('login-modal').style.display='flex'; setTimeout(()=>document.getElementById('login-email').focus(),100); }
+function closeLoginModal() { document.getElementById('login-modal').style.display='none'; document.getElementById('login-error').textContent=''; }
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-password').value;
+  document.getElementById('login-error').textContent = '';
+  const { data, error } = await supa.auth.signInWithPassword({ email, password: pass });
+  if (error) { document.getElementById('login-error').textContent = error.message; return; }
+  closeLoginModal();
+  setAdminMode(true);
+}
+
+async function doLogout() {
+  await supa.auth.signOut();
+  setAdminMode(false);
+}
+
+function setAdminMode(admin) {
+  isAdmin = admin;
+  document.body.classList.toggle('spectator', !admin);
+  const bar = document.getElementById('auth-bar');
+  if (admin) {
+    bar.innerHTML = '<span class="admin-badge">✓ ADMIN</span><button class="auth-btn logout" onclick="doLogout()">Logout</button>';
+  } else {
+    bar.innerHTML = '<button class="auth-btn" id="login-btn" onclick="openLoginModal()">🔐 Admin Login</button>';
+  }
+}
+
+// ─── REAL-TIME SYNC ───────────────────────────────────────
+function subscribeRealtime() {
+  if (realtimeChannel) supa.removeChannel(realtimeChannel);
+  realtimeChannel = supa.channel('tournament-state')
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tournament_state' }, payload => {
+      if (!isAdmin) { // Only spectators auto-update; admin is the source of truth
+        applyState(payload.new.state);
+        renderAll();
+      }
+    })
+    .subscribe();
+}
+
+function applyState(s) {
+  players       = s.players       || [];
+  groups        = s.groups        || [];
+  playoffBracket = s.playoffBracket || [];
+  playoffGenerated = s.playoffGenerated || false;
+  thirdPlaceMatch  = s.thirdPlaceMatch  || {teamA:null,teamB:null,scoreA:null,scoreB:null,winner:null};
+  cfgTeams  = s.cfgTeams  || 8;
+  cfgGroups = s.cfgGroups || 1;
+  cfgQualify= s.cfgQualify|| 2;
+}
+
+function renderAll() {
+  renderPlayers();
+  document.getElementById('cfg-teams').value   = cfgTeams;
+  document.getElementById('cfg-groups').value  = cfgGroups;
+  document.getElementById('cfg-qualify').value = cfgQualify;
+  updateConfig();
+  if (groups.length) renderGroupStage();
+  if (playoffGenerated) renderPlayoffs();
+}
+
+// Boot: check session + load from Supabase
+(async () => {
+  // Check existing session
+  const { data: { session } } = await supa.auth.getSession();
+  if (session) setAdminMode(true);
+  else document.body.classList.add('spectator');
+
+  // Load state from Supabase
+  const { data, error } = await supa.from('tournament_state').select('state').eq('id','main').single();
+  if (data && data.state && Object.keys(data.state).length > 0) {
+    applyState(data.state);
+    renderAll();
+  } else {
+    // Fall back to localStorage
+    if (loadStateLocal()) renderAll();
+    else updateConfig();
+  }
+
+  subscribeRealtime();
+})();
+
 // ─── CONSTANTS ───────────────────────────────────────────
 const STORAGE_KEY = 'semchapajax_v2';
 const GROUP_COLORS = [
@@ -595,9 +742,17 @@ let cfgTeams = 8, cfgGroups = 1, cfgQualify = 2;
 
 // ─── PERSISTENCE ─────────────────────────────────────────
 function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({players,groups,playoffBracket,playoffGenerated,thirdPlaceMatch,cfgTeams,cfgGroups,cfgQualify}));
+  const state = {players,groups,playoffBracket,playoffGenerated,thirdPlaceMatch,cfgTeams,cfgGroups,cfgQualify};
+  // Always keep localStorage as backup
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  // Push to Supabase if admin
+  if (isAdmin) {
+    supa.from('tournament_state').update({ state, updated_at: new Date().toISOString() }).eq('id','main').then(({error}) => {
+      if (error) console.warn('Supabase save error:', error.message);
+    });
+  }
 }
-function loadState() {
+function loadStateLocal() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return false;
@@ -1316,16 +1471,9 @@ function resetAll() {
 document.getElementById('reset-modal').addEventListener('click', e => { if(e.target===document.getElementById('reset-modal')) closeModal(); });
 
 // ─── BOOT ────────────────────────────────────────────────
-if (loadState()) {
-  document.getElementById('cfg-teams').value = cfgTeams;
-  document.getElementById('cfg-groups').value = cfgGroups;
-  document.getElementById('cfg-qualify').value = cfgQualify;
-  renderPlayers();
-  if (groups.length) { renderGroupStage(); }
-  if (playoffGenerated) renderPlayoffs();
-} else {
-  updateConfig();
-}
+// Boot handled by Supabase init above (async IIFE)
+// localStorage fallback also handled there
+function loadState() { return loadStateLocal(); } // keep compat
 </script>
 </body>
 </html>
