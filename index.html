@@ -449,6 +449,7 @@ body.spectator .btn-draw,
 body.spectator .btn-playoff,
 body.spectator .btn-danger,
 body.spectator #gen-playoffs-btn,
+body.spectator .admin-only-btn,
 body.spectator .remove-btn,
 body.spectator #player-input,
 body.spectator #manual-team-input,
@@ -463,6 +464,9 @@ body.spectator .config-grid input
 body.spectator #draw-actions .btn-primary,
 body.spectator #draw-actions .btn-secondary
   { display:none !important; }
+
+body.spectator .admin-only-btn { cursor:not-allowed !important; }
+body.spectator .admin-only-btn:hover { background:transparent !important; border-color:var(--border) !important; color:var(--text-muted) !important; }
 
 /* Scores visible but not editable in spectator mode */
 body.spectator .score-input,
@@ -828,12 +832,14 @@ function showTab(name) {
 
 // ─── PLAYERS ──────────────────────────────────────────────
 function addPlayer() {
+  if (!isAdmin) return;
   const inp = document.getElementById('player-input');
   const name = inp.value.trim(); if (!name) return;
   players.push(name); inp.value = ''; inp.focus();
   renderPlayers(); saveState();
 }
-function removePlayer(i) { players.splice(i,1); renderPlayers(); saveState(); }
+function removePlayer(i) {
+  if (!isAdmin) return; players.splice(i,1); renderPlayers(); saveState(); }
 function renderPlayers() {
   const grid = document.getElementById('player-grid'); grid.innerHTML = '';
   players.forEach((p,i) => {
@@ -896,6 +902,7 @@ function setMode(mode) {
 let manualTeams = [];
 
 function addManualTeam() {
+  if (!isAdmin) return;
   const inp = document.getElementById('manual-team-input');
   const name = inp.value.trim(); if (!name) return;
   manualTeams.push(name); inp.value = ''; inp.focus();
@@ -903,6 +910,7 @@ function addManualTeam() {
 }
 
 function removeManualTeam(i) {
+  if (!isAdmin) return;
   manualTeams.splice(i, 1);
   renderManualTeams();
 }
@@ -919,6 +927,7 @@ function renderManualTeams() {
 }
 
 function applyManualTeams() {
+  if (!isAdmin) return;
   updateConfig();
   if (manualTeams.length < 2) { alert('Add at least 2 teams.'); return; }
 
@@ -961,6 +970,7 @@ function applyManualTeams() {
 }
 
 function runDraw() {
+  if (!isAdmin) return;
   updateConfig();
   if (players.length < cfgTeams) { alert(`Add at least ${cfgTeams} players to draw ${cfgTeams} teams.`); return; }
 
@@ -1026,6 +1036,7 @@ function runDraw() {
 }
 
 function applyDraw() {
+  if (!isAdmin) return;
   if (!drawnGroups) return;
   groups = drawnGroups.map((members, gi) => {
     const teams = members.map(m => m);
@@ -1155,7 +1166,7 @@ function renderGroupStage() {
       Complete all matches to unlock playoffs
     </p>
     <div style="display:flex;gap:10px;margin-top:12px;justify-content:center">
-      <button class="btn-secondary" onclick="confirmGroupReset()">↩ Reset group stage</button>
+      <button class="btn-secondary admin-only-btn" onclick="confirmGroupReset()">↩ Reset group stage</button>
       <button class="btn-danger" onclick="confirmReset()">Reset all</button>
     </div>
   </div>`;
@@ -1228,6 +1239,7 @@ function updateStandingsTable(gi) {
 
 // ─── PLAYOFFS ────────────────────────────────────────────
 function generatePlayoffs() {
+  if (!isAdmin) return;
   // Check all matches are completed
   const incomplete = [];
   groups.forEach((g, gi) => {
@@ -1469,7 +1481,8 @@ function renderPlayoffs() {
 }
 
 // ─── RESET ───────────────────────────────────────────────
-function confirmReset() { document.getElementById('reset-modal').style.display='flex'; }
+function confirmReset() {
+  if (!isAdmin) return; document.getElementById('reset-modal').style.display='flex'; }
 
 function showConfirmModal(title, msg, onConfirm) {
   document.getElementById('confirm-modal-title').textContent = title;
@@ -1480,6 +1493,7 @@ function showConfirmModal(title, msg, onConfirm) {
 function closeConfirmModal() { document.getElementById('confirm-modal').style.display = 'none'; }
 
 function confirmGroupReset() {
+  if (!isAdmin) return;
   showConfirmModal('RESET GROUP STAGE?','All scores will be cleared. You can re-apply teams from setup.', _doGroupReset);
 }
 function _doGroupReset() {
@@ -1494,6 +1508,7 @@ function _doGroupReset() {
 }
 
 function confirmPlayoffReset() {
+  if (!isAdmin) return;
   showConfirmModal('RESET PLAYOFFS?','The bracket will be cleared.', _doPlayoffReset);
 }
 function _doPlayoffReset() {
