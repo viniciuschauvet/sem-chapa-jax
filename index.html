@@ -21,7 +21,7 @@
   --text:     #e4f5b0;
   --text-muted:rgba(210,240,130,0.5);
   --text-dim: rgba(245,210,26,0.2);
-  --glow-lime:0 0 18px rgba(245,210,26,0.55),0 0 55px rgba(245,210,26,0.18);
+  --glow-lime:0 0 10px rgba(245,210,26,0.5),0 0 22px rgba(245,210,26,0.15);
   --glow-soft:0 0 10px rgba(245,210,26,0.3);
 }
 
@@ -66,6 +66,8 @@ body::after{
   box-shadow:var(--glow-lime),0 0 80px rgba(13,31,92,0.5);
   background:linear-gradient(135deg,#060e2a,#0d1f5c 50%,#060e2a);
   position:relative;
+  contain:paint;
+  will-change:transform;
 }
 .hero-wrap::before{
   content:'';position:absolute;inset:0;
@@ -100,16 +102,9 @@ body::after{
   height:130px;width:130px;object-fit:contain;border-radius:50%;flex-shrink:0;
   box-shadow:0 0 30px rgba(245,210,26,0.55),0 0 80px rgba(245,210,26,0.2);
   animation:float 4s ease-in-out infinite;
+  will-change:transform;
 }
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-
-/* ── SCAN LINE ── */
-.hero-wrap::after{
-  content:'';position:absolute;left:0;right:0;height:2px;
-  background:linear-gradient(90deg,transparent,rgba(245,210,26,0.4),transparent);
-  animation:scan 3s linear infinite;z-index:2;pointer-events:none;
-}
-@keyframes scan{0%{top:0;opacity:0}10%{opacity:1}90%{opacity:1}100%{top:100%;opacity:0}}
 
 /* ── TAB BAR ── */
 .tab-bar{
@@ -139,11 +134,11 @@ body::after{
 
 /* ── CARDS ── */
 .card{
-  background:var(--surface);
+  background:rgba(4,14,40,0.96);
   border:1px solid var(--border);
   border-radius:16px;padding:20px 24px;margin-bottom:16px;
-  backdrop-filter:blur(14px);position:relative;overflow:hidden;
-  transition:border-color 0.25s,box-shadow 0.25s;
+  position:relative;overflow:hidden;
+  transition:border-color 0.25s;
 }
 .card::before{
   content:'';position:absolute;top:0;left:0;right:0;height:1px;
@@ -153,7 +148,7 @@ body::after{
   content:'';position:absolute;top:0;left:0;bottom:0;width:1px;
   background:linear-gradient(180deg,rgba(245,210,26,0.3),transparent 70%);
 }
-.card:hover{border-color:rgba(245,210,26,0.3);box-shadow:var(--glow-soft);}
+.card:hover{border-color:rgba(245,210,26,0.3);}
 
 /* ── SECTION TITLES ── */
 .section-title{
@@ -201,8 +196,8 @@ input[type=text]:focus,input[type=number]:focus{
 input[type=number]:disabled{opacity:0.25;cursor:not-allowed;}
 input::placeholder{color:var(--text-dim);}
 input[type=number]::-webkit-inner-spin-button,
-input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
-input[type=number]{-moz-appearance:textfield;}
+input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;appearance:none;margin:0;}
+input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 
 /* ── SCORE INPUTS ── */
 .score-input{
@@ -249,9 +244,9 @@ input[type=number]{-moz-appearance:textfield;}
   text-transform:uppercase;position:relative;overflow:hidden;
   background:linear-gradient(135deg,rgba(245,210,26,0.12),rgba(13,31,92,0.4));
   color:var(--lime);border:1px solid rgba(245,210,26,0.45);
-  transition:all 0.25s;
+  transition:border-color 0.25s,box-shadow 0.25s;
 }
-.btn-draw:hover{border-color:var(--lime);box-shadow:var(--glow-lime);transform:translateY(-1px);}
+.btn-draw:hover{border-color:var(--lime);box-shadow:var(--glow-lime);}
 .btn-draw::after{
   content:'';position:absolute;inset:0;
   background:linear-gradient(135deg,transparent 50%,rgba(245,210,26,0.07));
@@ -265,7 +260,7 @@ input[type=number]{-moz-appearance:textfield;}
   cursor:pointer;width:100%;margin-top:4px;text-transform:uppercase;
   background:linear-gradient(135deg,rgba(13,31,92,0.5),rgba(245,210,26,0.08));
   color:var(--lime-dim);border:1px solid rgba(245,210,26,0.3);
-  transition:all 0.25s;
+  transition:border-color 0.25s,box-shadow 0.25s,transform 0.25s;
 }
 .btn-playoff:hover{border-color:var(--lime);box-shadow:var(--glow-lime);transform:translateY(-1px);}
 
@@ -304,6 +299,13 @@ input[type=number]{-moz-appearance:textfield;}
 .player-chip span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .remove-btn{background:none;border:none;cursor:pointer;color:var(--text-dim);font-size:13px;padding:0 2px;transition:color 0.15s;}
 .remove-btn:hover{color:var(--red);}
+.side-toggle{display:flex;gap:4px;flex-shrink:0;}
+.side-btn{padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:11px;font-family:'Orbitron',monospace;font-weight:700;letter-spacing:0.05em;cursor:pointer;transition:all 0.15s;}
+.side-btn.active{background:rgba(245,210,26,0.15);border-color:var(--border-hi);color:#F5D21A;}
+.side-badge{font-size:8px;font-family:'Orbitron',monospace;font-weight:700;padding:1px 4px;border-radius:3px;line-height:1.4;}
+.player-chip .side-badge{flex:none;}
+.side-badge.left{background:rgba(245,210,26,0.12);color:#F5D21A;border:1px solid rgba(245,210,26,0.28);}
+.side-badge.right{background:rgba(245,210,26,0.12);color:#F5D21A;border:1px solid rgba(245,210,26,0.28);}
 
 /* ── CONFIG ── */
 .config-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px;}
@@ -402,6 +404,8 @@ input[type=number]{-moz-appearance:textfield;}
   background:rgba(0,0,0,0.88);backdrop-filter:blur(10px);
   z-index:999;align-items:center;justify-content:center;
 }
+.modal-overlay.open,#login-modal.open{animation:modalFadeIn 0.18s ease forwards;}
+@keyframes modalFadeIn{from{opacity:0}to{opacity:1}}
 .modal-box{
   background:rgba(4,10,30,0.97);border:1px solid rgba(255,64,96,0.3);
   border-radius:18px;padding:32px;max-width:340px;width:90%;text-align:center;
@@ -558,6 +562,10 @@ body.spectator td, body.spectator th
       <p class="section-title">Add players</p>
       <div class="player-add-row">
         <input type="text" id="player-input" placeholder="Player name..." onkeydown="if(event.key==='Enter')addPlayer()"/>
+        <div class="side-toggle">
+          <button class="side-btn active" id="side-left" onclick="selectSide('left')">L</button>
+          <button class="side-btn" id="side-right" onclick="selectSide('right')">R</button>
+        </div>
         <button class="btn-primary" onclick="addPlayer()">Add</button>
       </div>
       <div class="player-grid" id="player-grid"></div>
@@ -574,7 +582,7 @@ body.spectator td, body.spectator th
       </div>
       <div class="player-grid" id="manual-team-grid"></div>
       <p class="info-text" id="manual-team-count" style="margin-bottom:14px">0 teams added</p>
-      <button class="btn-draw" onclick="applyManualTeams()">⬡ Apply teams</button>
+      <button class="btn-draw" onclick="applyManualTeams()">⬡ Assign Groups</button>
     </div>
 
     <!-- Draw result (shared by both modes) -->
@@ -659,8 +667,8 @@ let isAdmin = false;
 let realtimeChannel = null;
 
 // ─── AUTH ─────────────────────────────────────────────────
-function openLoginModal() { document.getElementById('login-modal').style.display='flex'; setTimeout(()=>document.getElementById('login-email').focus(),100); }
-function closeLoginModal() { document.getElementById('login-modal').style.display='none'; document.getElementById('login-error').textContent=''; }
+function openLoginModal() { const m=document.getElementById('login-modal'); m.style.display='flex'; m.classList.add('open'); setTimeout(()=>document.getElementById('login-email').focus(),100); }
+function closeLoginModal() { const m=document.getElementById('login-modal'); m.style.display='none'; m.classList.remove('open'); document.getElementById('login-error').textContent=''; }
 
 async function doLogin() {
   const email = document.getElementById('login-email').value.trim();
@@ -713,7 +721,7 @@ function subscribeRealtime() {
 }
 
 function applyState(s) {
-  players       = s.players       || [];
+  players       = (s.players || []).map(p => typeof p === 'string' ? {name: p, side: null} : p);
   groups        = s.groups        || [];
   playoffBracket = s.playoffBracket || [];
   playoffGenerated = s.playoffGenerated || false;
@@ -777,8 +785,15 @@ const GROUP_COLORS = [
 
 // ─── STATE ───────────────────────────────────────────────
 let players = [];
+let selectedSide = 'left';
+function selectSide(side) {
+  selectedSide = side;
+  document.getElementById('side-left').classList.toggle('active', side === 'left');
+  document.getElementById('side-right').classList.toggle('active', side === 'right');
+}
 let groups = [];
 let drawnGroups = null;
+let drawnTeamPlayers = null;
 let playoffBracket = [];
 let playoffGenerated = false;
 let thirdPlaceMatch = {teamA:null,teamB:null,scoreA:null,scoreB:null,winner:null};
@@ -801,7 +816,7 @@ function loadStateLocal() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return false;
     const s = JSON.parse(raw);
-    players = s.players || [];
+    players = (s.players || []).map(p => typeof p === 'string' ? {name: p, side: null} : p);
     groups = s.groups || [];
     playoffBracket = s.playoffBracket || [];
     playoffGenerated = s.playoffGenerated || false;
@@ -826,16 +841,19 @@ function addPlayer() {
   if (!isAdmin) return;
   const inp = document.getElementById('player-input');
   const name = inp.value.trim(); if (!name) return;
-  players.push(name); inp.value = ''; inp.focus();
+  players.push({name, side: selectedSide}); inp.value = ''; inp.focus();
   renderPlayers(); saveState();
 }
 function removePlayer(i) {
   if (!isAdmin) return; players.splice(i,1); renderPlayers(); saveState(); }
 function renderPlayers() {
   const grid = document.getElementById('player-grid'); grid.innerHTML = '';
-  players.forEach((p,i) => {
+  players.forEach((p, i) => {
+    const pName = typeof p === 'string' ? p : p.name;
+    const pSide = typeof p === 'string' ? null : p.side;
     const chip = document.createElement('div'); chip.className = 'player-chip';
-    chip.innerHTML = `<span title="${p}">${p}</span><button class="remove-btn" onclick="removePlayer(${i})">✕</button>`;
+    const badge = pSide ? `<span class="side-badge ${pSide}">${pSide === 'left' ? 'L' : 'R'}</span>` : '';
+    chip.innerHTML = `${badge}<span title="${pName}">${pName}</span><button class="remove-btn" onclick="removePlayer(${i})">✕</button>`;
     grid.appendChild(chip);
   });
   document.getElementById('player-count').textContent = `${players.length} player${players.length!==1?'s':''} added`;
@@ -847,7 +865,6 @@ function updateConfig() {
   cfgGroups  = Math.max(1, parseInt(document.getElementById('cfg-groups').value) || 1);
   cfgQualify = Math.max(1, parseInt(document.getElementById('cfg-qualify').value) || 1);
 
-  if (cfgTeams <= 5 && cfgGroups > 1) { cfgGroups = 1; document.getElementById('cfg-groups').value = 1; }
   const maxGroups = Math.floor(cfgTeams / 2);
   if (cfgGroups > maxGroups) { cfgGroups = maxGroups; document.getElementById('cfg-groups').value = maxGroups; }
 
@@ -862,7 +879,7 @@ function updateConfig() {
   document.getElementById('config-summary').textContent =
     `${cfgTeams} teams · ${cfgGroups} group${cfgGroups>1?'s':''} · ${totalGames} group games · ${totalPlayoff} teams in playoffs`;
 
-  document.getElementById('cfg-groups').disabled = cfgTeams <= 5;
+  document.getElementById('cfg-groups').disabled = maxGroups <= 1;
 }
 
 // ─── DRAW ─────────────────────────────────────────────────
@@ -922,9 +939,10 @@ function applyManualTeams() {
   updateConfig();
   if (manualTeams.length < 2) { alert('Add at least 2 teams.'); return; }
 
-  // Distribute teams across groups
+  // Distribute teams across groups randomly
+  const shuffledManual = shuffle(manualTeams);
   drawnGroups = Array.from({length: cfgGroups}, () => []);
-  manualTeams.forEach((name, i) => drawnGroups[i % cfgGroups].push(name));
+  shuffledManual.forEach((name, i) => drawnGroups[i % cfgGroups].push(name));
 
   // Render draw result cards (same as runDraw)
   const result = document.getElementById('draw-result');
@@ -942,15 +960,8 @@ function applyManualTeams() {
       div.style.cssText = `background:${c.bg};border-color:${c.border};color:${c.title}`;
       const label = groupLabel ? `<span style="font-size:9px;font-family:'Orbitron',monospace;color:${c.text};opacity:0.6;letter-spacing:0.1em">${groupLabel}</span><br>` : '';
       const teamNumber = `<p class="team-col-title" style="color:${c.title}">Team ${teamIdx + 1}</p>`;
-      const gIdx = gi, tIdx = ti;
-      const nameInput = document.createElement('input');
-      nameInput.type = 'text'; nameInput.value = teamName; nameInput.placeholder = 'Team name...';
-      nameInput.style.cssText = `margin-top:4px;width:100%;font-size:12px;font-weight:600;padding:5px 8px;border-radius:6px;background:rgba(0,0,0,0.25);border:1px solid ${c.border};color:${c.title};font-family:'Space Grotesk',sans-serif;outline:none;`;
-      nameInput.addEventListener('input', () => { drawnGroups[gIdx][tIdx] = nameInput.value || teamName; });
-      nameInput.addEventListener('focus', () => nameInput.style.borderColor = '#F5D21A');
-      nameInput.addEventListener('blur',  () => nameInput.style.borderColor = c.border);
-      div.innerHTML = label + teamNumber;
-      div.appendChild(nameInput);
+      const ps = teamName.split(' / ').map(p => `<div class="team-player" style="color:${c.text}">${p}</div>`).join('');
+      div.innerHTML = label + teamNumber + ps;
       result.appendChild(div);
       teamIdx++;
     });
@@ -965,22 +976,35 @@ function runDraw() {
   updateConfig();
   if (players.length < cfgTeams) { alert(`Add at least ${cfgTeams} players to draw ${cfgTeams} teams.`); return; }
 
-  const shuffled = shuffle(players);
-  const playersPerTeam = Math.floor(shuffled.length / cfgTeams);
-  const extras = shuffled.length % cfgTeams;
+  // Separate by side, shuffle each pool, then interleave L-R so pairs land together
+  const leftPool  = shuffle(players.filter(p => (typeof p === 'string' ? null : p.side) !== 'right'));
+  const rightPool = shuffle(players.filter(p => (typeof p === 'string' ? null : p.side) === 'right'));
+  const ordered = [];
+  let li = 0, ri = 0;
+  while (li < leftPool.length || ri < rightPool.length) {
+    if (li < leftPool.length)  ordered.push(leftPool[li++]);
+    if (ri < rightPool.length) ordered.push(rightPool[ri++]);
+  }
+
+  const playersPerTeam = Math.floor(ordered.length / cfgTeams);
+  const extras = ordered.length % cfgTeams;
 
   const teams = [];
   let idx = 0;
   for (let t = 0; t < cfgTeams; t++) {
     const size = playersPerTeam + (t < extras ? 1 : 0);
-    teams.push(shuffled.slice(idx, idx + size));
+    teams.push(ordered.slice(idx, idx + size));
     idx += size;
   }
 
-  const teamNames = teams.map(t => t.join(' / '));
+  const teamNames = teams.map(t => t.map(p => (typeof p === 'string' ? p : p.name)).join(' / '));
 
   drawnGroups = Array.from({length: cfgGroups}, () => []);
-  teamNames.forEach((name, i) => drawnGroups[i % cfgGroups].push(name));
+  drawnTeamPlayers = Array.from({length: cfgGroups}, () => []);
+  teamNames.forEach((name, i) => {
+    drawnGroups[i % cfgGroups].push(name);
+    drawnTeamPlayers[i % cfgGroups].push(teams[i]);
+  });
 
   const result = document.getElementById('draw-result');
   const cols = Math.min(cfgTeams, 4);
@@ -997,26 +1021,14 @@ function runDraw() {
       div.style.cssText = `background:${c.bg};border-color:${c.border};color:${c.title}`;
       const label = groupLabel ? `<span style="font-size:9px;font-family:'Orbitron',monospace;color:${c.text};opacity:0.6;letter-spacing:0.1em">${groupLabel}</span><br>` : '';
       const teamNumber = `<p class="team-col-title" style="color:${c.title}">Team ${teamIdx + 1}</p>`;
-      const ps = teamName.split(' / ').map(p => `<div class="team-player" style="color:${c.text}">${p}</div>`).join('');
-      // Editable team name input
-      const gIdx = gi, tIdx = ti;
-      const nameInput = document.createElement('input');
-      nameInput.type = 'text';
-      nameInput.value = teamName;
-      nameInput.placeholder = 'Team name...';
-      nameInput.style.cssText = `
-        margin-top:8px;width:100%;font-size:12px;font-weight:600;
-        padding:5px 8px;border-radius:6px;
-        background:rgba(0,0,0,0.25);border:1px solid ${c.border};
-        color:${c.title};font-family:'Space Grotesk',sans-serif;outline:none;
-      `;
-      nameInput.addEventListener('input', () => {
-        drawnGroups[gIdx][tIdx] = nameInput.value || teamName;
-      });
-      nameInput.addEventListener('focus', () => nameInput.style.borderColor = '#F5D21A');
-      nameInput.addEventListener('blur',  () => nameInput.style.borderColor = c.border);
+      const teamPlayers = drawnTeamPlayers[gi][ti];
+      const ps = teamPlayers.map(p => {
+        const pName = typeof p === 'string' ? p : p.name;
+        const pSide = typeof p === 'string' ? null : p.side;
+        const badge = pSide ? `<span class="side-badge ${pSide}" style="margin-left:5px">${pSide === 'left' ? 'L' : 'R'}</span>` : '';
+        return `<div class="team-player" style="color:${c.text};display:flex;align-items:center;justify-content:space-between">${pName}${badge}</div>`;
+      }).join('');
       div.innerHTML = label + teamNumber + ps;
-      div.appendChild(nameInput);
       result.appendChild(div);
       teamIdx++;
     });
@@ -1500,10 +1512,13 @@ function confirmGroupReset() {
   showConfirmModal('RESET GROUP STAGE?','All scores will be cleared. You can re-apply teams from setup.', _doGroupReset);
 }
 function _doGroupReset() {
-  groups = []; drawnGroups = null; playoffBracket = []; playoffGenerated = false; thirdPlaceMatch = {teamA:null,teamB:null,scoreA:null,scoreB:null,winner:null};
-  document.getElementById('draw-result').style.display = 'none';
-  document.getElementById('redraw-btn').style.display = 'none';
-  document.getElementById('apply-btn').style.display = 'none';
+  groups = []; playoffBracket = []; playoffGenerated = false; thirdPlaceMatch = {teamA:null,teamB:null,scoreA:null,scoreB:null,winner:null};
+  // Keep drawn teams — just re-expose the apply button so admin can re-apply
+  if (drawnGroups) {
+    document.getElementById('draw-result').style.display = 'grid';
+    document.getElementById('apply-btn').style.display = 'inline-block';
+    document.getElementById('redraw-btn').style.display = 'inline-block';
+  }
   document.getElementById('group-stage-content').innerHTML = '<div class="card" style="text-align:center;padding:40px 20px"><p class="info-text">Execute the draw first to initialize groups.</p></div>';
   document.getElementById('playoff-content').innerHTML = '<div class="card" style="text-align:center;padding:40px 20px"><p class="info-text" style="margin-bottom:18px">Complete the group stage to unlock playoffs.</p><button class="btn-playoff" onclick="generatePlayoffs()">Generate playoffs →</button></div>';
   saveState();
